@@ -1,5 +1,5 @@
 
-/* Main Navigation & Theme Toggle - Compress To KB */
+/* Main Navigation, Theme Toggle & FAQ Accordion - Compress To KB */
 document.addEventListener('DOMContentLoaded', function () {
   'use strict';
 
@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', function () {
       menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
     });
 
-    // Close on outside click
     document.addEventListener('click', function (e) {
       if (!mobileNav.contains(e.target) && !menuBtn.contains(e.target) && mobileNav.classList.contains('active')) {
         mobileNav.classList.remove('active');
@@ -24,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // Close on Escape key
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && mobileNav.classList.contains('active')) {
         mobileNav.classList.remove('active');
@@ -45,4 +43,56 @@ document.addEventListener('DOMContentLoaded', function () {
       try { localStorage.setItem('theme', next); } catch (e) {}
     });
   }
-});
+
+  // More Tools Dropdown (Desktop)
+  var moreBtn = document.getElementById('more-tools-btn');
+  var moreDropdown = document.getElementById('more-tools-dropdown');
+  if (moreBtn && moreDropdown) {
+    moreBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var isOpen = moreDropdown.classList.toggle('active');
+      moreBtn.setAttribute('aria-expanded', isOpen);
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!moreDropdown.contains(e.target) && !moreBtn.contains(e.target) && moreDropdown.classList.contains('active')) {
+        moreDropdown.classList.remove('active');
+        moreBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && moreDropdown.classList.contains('active')) {
+        moreDropdown.classList.remove('active');
+        moreBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // FAQ Accordion
+  var faqButtons = document.querySelectorAll('.faq-toggle');
+  faqButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var item = btn.closest('.faq-item');
+      if (!item) return;
+      var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+      var panelId = btn.getAttribute('aria-controls');
+      var panel = document.getElementById(panelId);
+      if (!panel) return;
+
+      // Close all other items
+      document.querySelectorAll('.faq-item.active').forEach(function (openItem) {
+        if (openItem !== item) {
+          openItem.classList.remove('active');
+          var openBtn = openItem.querySelector('.faq-toggle');
+          if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      // Toggle current
+      item.classList.toggle('active');
+      btn.setAttribute('aria-expanded', String(!isExpanded));
+    });
+  });
+}());
