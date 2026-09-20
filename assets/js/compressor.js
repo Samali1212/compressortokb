@@ -484,7 +484,7 @@
 
     // Determine output format
     // Check for user-selected output format
-    var formatSelect = document.getElementById('output-format');
+    var formatSelect = document.getElementById('output-format-select');
     var userFormat = formatSelect ? formatSelect.value : 'auto';
     let outputFormat = getSuggestedOutputFormat(mimeType, transparent, targetKB, userFormat);
 
@@ -849,7 +849,7 @@
       dropZone: document.getElementById('drop-zone'),
       dropZoneInput: document.getElementById('drop-zone-input'),
       targetSizeSelect: document.getElementById('target-size'),
-      outputFormatSelect: document.getElementById('output-format'),
+      outputFormatSelect: document.getElementById('output-format-select'),
       compressBtn: document.getElementById('compress-btn'),
       downloadBtn: document.getElementById('download-btn'),
       resetBtn: document.getElementById('reset-btn'),
