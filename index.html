@@ -331,30 +331,60 @@
     <div class="container">
       <h2 class="section-title">Frequently Asked Questions</h2>
       <div class="article">
-        <div class="faq-item">
-          <h3 class="faq-question">Is this image compressor completely free?</h3>
-          <p class="faq-answer">Yes, Compress To KB is 100% free to use. There are no hidden fees, no watermarks, no registration requirements, and no usage limits.</p>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-0">
+          Is this image compressor completely free?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-0" class="faq-panel" role="region">
+          <p>Yes, Compress To KB is 100% free to use. There are no hidden fees, no watermarks, no registration requirements, and no usage limits.</p>
         </div>
-        <div class="faq-item">
-          <h3 class="faq-question">Are my images uploaded to a server?</h3>
-          <p class="faq-answer">No. All compression happens locally in your browser using JavaScript. Your images never leave your device, making this tool completely private and secure for sensitive content.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-1">
+          Are my images uploaded to a server?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-1" class="faq-panel" role="region">
+          <p>No. All compression happens locally in your browser using JavaScript. Your images never leave your device, making this tool completely private and secure for sensitive content.</p>
         </div>
-        <div class="faq-item">
-          <h3 class="faq-question">What is the maximum file size I can compress?</h3>
-          <p class="faq-answer">You can upload images up to 50MB in size. However, extremely large images may take longer to process, and very high-resolution images may need to be scaled down to reach smaller target sizes.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-2">
+          What is the maximum file size I can compress?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-2" class="faq-panel" role="region">
+          <p>You can upload images up to 50MB in size. However, extremely large images may take longer to process, and very high-resolution images may need to be scaled down to reach smaller target sizes.</p>
         </div>
-        <div class="faq-item">
-          <h3 class="faq-question">Will my compressed image look exactly like the original?</h3>
-          <p class="faq-answer">Compression always involves some trade-off between file size and visual quality. Our intelligent algorithm minimizes quality loss, but aggressive compression targets (such as 20KB for a large photo) will result in visible changes. You can preview the result before downloading.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-3">
+          Will my compressed image look exactly like the original?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-3" class="faq-panel" role="region">
+          <p>Compression always involves some trade-off between file size and visual quality. Our intelligent algorithm minimizes quality loss, but aggressive compression targets (such as 20KB for a large photo) will result in visible changes. You can preview the result before downloading.</p>
         </div>
-        <div class="faq-item">
-          <h3 class="faq-question">Does this tool work on mobile devices?</h3>
-          <p class="faq-answer">Yes, Compress To KB is fully responsive and works on smartphones, tablets, and desktop computers. You can compress images directly from your phone's photo gallery.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-4">
+          Does this tool work on mobile devices?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-4" class="faq-panel" role="region">
+          <p>Yes, Compress To KB is fully responsive and works on smartphones, tablets, and desktop computers. You can compress images directly from your phone's photo gallery.</p>
         </div>
-        <div class="faq-item">
-          <h3 class="faq-question">Can I compress multiple images at once?</h3>
-          <p class="faq-answer">Currently, the tool processes one image at a time to ensure the best quality optimization for each file. After downloading your compressed image, you can immediately upload another.</p>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-5">
+          Can I compress multiple images at once?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-5" class="faq-panel" role="region">
+          <p>Currently, the tool processes one image at a time to ensure the best quality optimization for each file. After downloading your compressed image, you can immediately upload another.</p>
         </div>
+      </div>
       </div>
     </div>
   </section>
@@ -423,5 +453,6 @@
     </div>
   </div>
 </footer>
+<script src="/assets/js/main.js" defer></script>
 </body>
 </html>
