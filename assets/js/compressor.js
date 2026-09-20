@@ -1,3 +1,4 @@
+
 /**
  * Image Compressor Hub - Core Engine v2.0
  * 100% client-side image compression
@@ -511,15 +512,16 @@
     }
 
     // Step 3: If still too large and we used PNG, try lossy format
-    if ((!result.blob || result.blob.size > targetBytes) && outputFormat === CONFIG.PNG_FORMAT && !transparent) {
-      // PNG without transparency can be converted to lossy for smaller size
+    // Only auto-override if user did NOT explicitly select PNG
+    if ((!result.blob || result.blob.size > targetBytes) && outputFormat === CONFIG.PNG_FORMAT && !transparent && userFormat === 'auto') {
       const lossyFormat = supportsWebP() ? CONFIG.WEBP_FORMAT : CONFIG.DEFAULT_FORMAT;
       result = await compressWithBinarySearch(currentCanvas, lossyFormat, targetBytes, false);
       if (result.blob) outputFormat = lossyFormat;
     }
 
     // Step 4: If still too large with JPEG, try WebP
-    if ((!result.blob || result.blob.size > targetBytes) && outputFormat === CONFIG.DEFAULT_FORMAT && supportsWebP()) {
+    // Only auto-override if user did NOT explicitly select JPEG
+    if ((!result.blob || result.blob.size > targetBytes) && outputFormat === CONFIG.DEFAULT_FORMAT && supportsWebP() && userFormat === 'auto') {
       result = await compressWithBinarySearch(currentCanvas, CONFIG.WEBP_FORMAT, targetBytes, transparent);
       if (result.blob) outputFormat = CONFIG.WEBP_FORMAT;
     }
