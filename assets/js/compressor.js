@@ -893,6 +893,14 @@
       if (e.target.files && e.target.files[0]) handleFileSelect(e.target.files[0]);
     });
 
+    // Click to browse (div-based drop zone, not label)
+    els.dropZone && els.dropZone.addEventListener('click', function(e) {
+      // Only trigger if click is NOT on the file input itself (which is already clickable)
+      if (e.target !== els.dropZoneInput) {
+        els.dropZoneInput && els.dropZoneInput.click();
+      }
+    });
+
     // Drag & drop
     els.dropZone && els.dropZone.addEventListener('dragover', handleDragOver);
     els.dropZone && els.dropZone.addEventListener('dragleave', handleDragLeave);
