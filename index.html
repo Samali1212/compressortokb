@@ -62,6 +62,31 @@
     <nav class="site-nav" aria-label="Main navigation">
       <a href="/" class="nav-link">Home</a>
       <a href="/image-compressor-to-50kb/" class="nav-link">50KB Tool</a>
+      <div class="more-menu">
+        <button id="more-tools-btn" class="more-menu-btn" aria-expanded="false" aria-haspopup="true" aria-controls="more-tools-dropdown">
+          More
+          <svg class="more-menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="more-tools-dropdown" class="more-dropdown" role="menu">
+          <span class="more-dropdown-title">All Tools</span>
+      <a href="/image-compressor-to-20kb/">20KB Tool</a>
+      <a href="/image-compressor-to-50kb/">50KB Tool</a>
+      <a href="/image-compressor-to-75kb/">75KB Tool</a>
+      <a href="/image-compressor-to-100kb/">100KB Tool</a>
+      <a href="/image-compressor-to-125kb/">125KB Tool</a>
+      <a href="/image-compressor-to-150kb/">150KB Tool</a>
+      <a href="/image-compressor-to-175kb/">175KB Tool</a>
+      <a href="/image-compressor-to-200kb/">200KB Tool</a>
+      <a href="/image-compressor-to-225kb/">225KB Tool</a>
+      <a href="/image-compressor-to-250kb/">250KB Tool</a>
+      <a href="/image-compressor-to-275kb/">275KB Tool</a>
+      <a href="/image-compressor-to-300kb/">300KB Tool</a>
+      <a href="/image-compressor-to-350kb/">350KB Tool</a>
+      <a href="/image-compressor-to-400kb/">400KB Tool</a>
+      <a href="/image-compressor-to-450kb/">450KB Tool</a>
+      <a href="/image-compressor-to-500kb/">500KB Tool</a>
+        </div>
+      </div>
       <a href="/about/" class="nav-link">About</a>
       <a href="/contact/" class="nav-link">Contact</a>
       <a href="/blog/" class="nav-link">Blog</a>
@@ -80,6 +105,25 @@
     <div class="container">
       <a href="/" class="nav-link">Home</a>
       <a href="/image-compressor-to-50kb/" class="nav-link">50KB Tool</a>
+      <div class="mobile-more-tools">
+        <span class="mobile-more-tools-title">All Tools</span>
+      <a href="/image-compressor-to-20kb/" class="nav-link">20KB Tool</a>
+      <a href="/image-compressor-to-50kb/" class="nav-link">50KB Tool</a>
+      <a href="/image-compressor-to-75kb/" class="nav-link">75KB Tool</a>
+      <a href="/image-compressor-to-100kb/" class="nav-link">100KB Tool</a>
+      <a href="/image-compressor-to-125kb/" class="nav-link">125KB Tool</a>
+      <a href="/image-compressor-to-150kb/" class="nav-link">150KB Tool</a>
+      <a href="/image-compressor-to-175kb/" class="nav-link">175KB Tool</a>
+      <a href="/image-compressor-to-200kb/" class="nav-link">200KB Tool</a>
+      <a href="/image-compressor-to-225kb/" class="nav-link">225KB Tool</a>
+      <a href="/image-compressor-to-250kb/" class="nav-link">250KB Tool</a>
+      <a href="/image-compressor-to-275kb/" class="nav-link">275KB Tool</a>
+      <a href="/image-compressor-to-300kb/" class="nav-link">300KB Tool</a>
+      <a href="/image-compressor-to-350kb/" class="nav-link">350KB Tool</a>
+      <a href="/image-compressor-to-400kb/" class="nav-link">400KB Tool</a>
+      <a href="/image-compressor-to-450kb/" class="nav-link">450KB Tool</a>
+      <a href="/image-compressor-to-500kb/" class="nav-link">500KB Tool</a>
+      </div>
       <a href="/about/" class="nav-link">About</a>
       <a href="/contact/" class="nav-link">Contact</a>
       <a href="/blog/" class="nav-link">Blog</a>
@@ -103,9 +147,12 @@
 
   <label class="drop-zone" id="drop-zone" for="drop-zone-input" aria-label="Upload image by clicking or dragging and dropping">
     <input type="file" id="drop-zone-input" class="drop-zone-input" accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/bmp,image/tiff" aria-label="Select image file">
-    <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-    <span class="drop-zone-text" style="display:block;">Drop your image here, or click to browse</span>
-    <span class="drop-zone-hint" style="display:block;">Supports JPG, PNG, WebP, AVIF, GIF, BMP, and TIFF. All processing happens in your browser. Max file size: 50MB.</span>
+    <div class="drop-zone-icon-wrap">
+      <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+    </div>
+    <span class="drop-zone-text">Drop your image here, or click to browse</span>
+    <span class="drop-zone-subtext">Fast, private, and completely free</span>
+    <span class="drop-zone-hint">Supports JPG, PNG, WebP, AVIF, GIF, BMP, and TIFF. All processing happens in your browser. Max file size: 50MB.</span>
     <span class="file-types" aria-hidden="true">
       <span class="file-type-tag">JPG</span>
       <span class="file-type-tag">PNG</span>
@@ -113,7 +160,7 @@
       <span class="file-type-tag">AVIF</span>
       <span class="file-type-tag">GIF</span>
     </span>
-    <span id="file-info" style="display:block;margin-top:0.75rem;font-weight:600;color:var(--accent);font-size:0.9375rem;"></span>
+    <span id="file-info"></span>
   </label>
 
   <div class="compressor-controls">
