@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -104,7 +105,14 @@
     <input type="file" id="drop-zone-input" class="drop-zone-input" accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/bmp,image/tiff" aria-label="Select image file">
     <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
     <span class="drop-zone-text" style="display:block;">Drop your image here, or click to browse</span>
-    <span class="drop-zone-hint" style="display:block;">Supports JPG, PNG, WebP, and AVIF where supported by your browser. GIF, BMP, and TIFF support depends on browser image decoding capabilities. (max 50MB)</span>
+    <span class="drop-zone-hint" style="display:block;">Supports JPG, PNG, WebP, AVIF, GIF, BMP, and TIFF. All processing happens in your browser. Max file size: 50MB.</span>
+    <span class="file-types" aria-hidden="true">
+      <span class="file-type-tag">JPG</span>
+      <span class="file-type-tag">PNG</span>
+      <span class="file-type-tag">WebP</span>
+      <span class="file-type-tag">AVIF</span>
+      <span class="file-type-tag">GIF</span>
+    </span>
     <span id="file-info" style="display:block;margin-top:0.75rem;font-weight:600;color:var(--accent);font-size:0.9375rem;"></span>
   </label>
 
@@ -128,6 +136,16 @@
         <option value="400">400 KB</option>
         <option value="450">450 KB</option>
         <option value="500">500 KB</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="output-format-select" class="control-label">Output Format</label>
+      <select id="output-format-select" class="target-size-select" aria-label="Select output image format">
+        <option value="auto" selected>Auto (Recommended)</option>
+        <option value="image/jpeg">JPG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+        <option value="image/avif">AVIF</option>
       </select>
     </div>
     <button id="compress-btn" class="btn btn-primary" disabled aria-label="Compress image">
@@ -333,56 +351,92 @@
       <div class="article">
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-0">
-          Is this image compressor completely free?
+          What is Compress To KB?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-0" class="faq-panel" role="region">
-          <p>Yes, Compress To KB is 100% free to use. There are no hidden fees, no watermarks, no registration requirements, and no usage limits.</p>
+          <p>Compress To KB is a free, browser-based image compression tool that lets you reduce image file sizes to specific targets like 20KB, 50KB, 100KB, and up to 500KB. All processing happens locally in your browser with no server uploads.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-1">
-          Are my images uploaded to a server?
+          How do I choose the right target size?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-1" class="faq-panel" role="region">
-          <p>No. All compression happens locally in your browser using JavaScript. Your images never leave your device, making this tool completely private and secure for sensitive content.</p>
+          <p>Select a target size based on where you need to use the image. Government portals often require 20KB to 50KB. Social media and web uploads typically need 50KB to 200KB. Higher quality needs like portfolios and e-commerce may use 200KB to 500KB.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-2">
-          What is the maximum file size I can compress?
+          What makes Compress To KB different from other tools?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-2" class="faq-panel" role="region">
-          <p>You can upload images up to 50MB in size. However, extremely large images may take longer to process, and very high-resolution images may need to be scaled down to reach smaller target sizes.</p>
+          <p>Unlike many online compressors, Compress To KB works entirely in your browser with no uploads to any server. It offers precise target-size compression, supports multiple output formats, provides before-and-after previews, and works on all devices including mobile phones.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-3">
-          Will my compressed image look exactly like the original?
+          Is there a limit to how many images I can compress?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-3" class="faq-panel" role="region">
-          <p>Compression always involves some trade-off between file size and visual quality. Our intelligent algorithm minimizes quality loss, but aggressive compression targets (such as 20KB for a large photo) will result in visible changes. You can preview the result before downloading.</p>
+          <p>No, there are no usage limits. You can compress as many images as you need, completely free. Each image is processed one at a time to ensure optimal quality for the target size you select.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-4">
-          Does this tool work on mobile devices?
+          Is this tool completely free to use?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-4" class="faq-panel" role="region">
-          <p>Yes, Compress To KB is fully responsive and works on smartphones, tablets, and desktop computers. You can compress images directly from your phone's photo gallery.</p>
+          <p>Yes, Compress To KB is 100% free to use. There are no hidden fees, no watermarks, no registration requirements, and no usage limits. You can compress as many images as you need without any cost.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-5">
-          Can I compress multiple images at once?
+          Are my images uploaded to any server?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-5" class="faq-panel" role="region">
-          <p>Currently, the tool processes one image at a time to ensure the best quality optimization for each file. After downloading your compressed image, you can immediately upload another.</p>
+          <p>No. All compression happens entirely within your browser using JavaScript. Your images never leave your device, making this tool completely private and secure for sensitive content including personal photos, documents, and proprietary images.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-6">
+          What image formats are supported?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-6" class="faq-panel" role="region">
+          <p>The tool supports JPG, PNG, WebP, AVIF, GIF, BMP, and TIFF as input formats. For output, you can choose between Auto (recommended), JPG, PNG, WebP, or AVIF using the Output Format dropdown.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-7">
+          Can I compress multiple images at once?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-7" class="faq-panel" role="region">
+          <p>Currently, the tool processes one image at a time to ensure the best quality optimization for each file. After downloading your compressed image, you can immediately upload another file without refreshing the page.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-8">
+          Why is my compressed image larger than the target size?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-8" class="faq-panel" role="region">
+          <p>Some images contain too much detail or are too large in dimensions to reach the target size without unacceptable quality loss. In such cases, the tool will compress as close as possible to the target and show you the actual result with a before-and-after preview.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-9">
+          Does compression reduce image quality?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-9" class="faq-panel" role="region">
+          <p>Yes, image compression always involves some quality reduction to achieve a smaller file size. However, our tool uses intelligent algorithms to minimize visible quality loss while reaching your target size. The preview lets you decide if the result meets your needs before downloading.</p>
         </div>
       </div>
       </div>
@@ -449,7 +503,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; Compress To KB. All processing happens locally in your browser.</p>
+      <p>&copy; 2026 Compressortokb. All rights reserved.</p>
     </div>
   </div>
 </footer>
