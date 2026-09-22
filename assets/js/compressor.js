@@ -473,23 +473,54 @@
 
     setProgress(1, 'Reading image...');
 
-    // Read orientation and load image in parallel
-    const [orientation, dataUrl] = await Promise.all([
+    // Read orientation and prepare the image source in parallel.
+    // NOTE: we intentionally use URL.createObjectURL() here instead of
+    // FileReader.readAsDataURL(). Converting a whole file to a base64
+    // data URL string requires holding the entire encoded file in memory
+    // at once (roughly 1.33x the file size, plus string overhead), which
+    // reliably fails with "Failed to read file" on mobile Chrome for the
+    // large JPEGs modern phone cameras produce (48MP/108MP sensors easily
+    // save 10-25MB photos), even though desktop Chrome has enough memory
+    // headroom to handle it. createObjectURL() just hands the browser a
+    // lightweight reference to the file instead, so no large in-memory
+    // copy is ever made.
+    const [orientation, imgSrc] = await Promise.all([
       mimeType === 'image/jpeg' ? readOrientation(file) : Promise.resolve(1),
-      fileToDataUrl(file)
+      Promise.resolve(URL.createObjectURL(file))
     ]);
 
     setProgress(2, 'Analyzing image...');
 
-    const img = await loadImage(dataUrl);
+    let img;
+    try {
+      img = await loadImage(imgSrc);
+    } finally {
+      // The pixels are decoded into the Image element by the time
+      // loadImage() resolves (or never will be, if it rejected), so the
+      // object URL itself is no longer needed either way.
+      URL.revokeObjectURL(imgSrc);
+    }
 
     // Check dimensions and warn if too large
     if (img.naturalWidth > 8000 || img.naturalHeight > 8000) {
       throw new Error('Image dimensions are too large. Maximum supported is 8000x8000 pixels.');
     }
 
-    // Draw with correct orientation
-    const orientedCanvas = drawImageWithOrientation(img, orientation);
+    // Draw with correct orientation.
+    //
+    // IMPORTANT: We intentionally do NOT re-apply the EXIF orientation
+    // correction here, even though `orientation` (read from the raw file
+    // bytes above) may be a rotated value like 6. Every modern browser
+    // (Chrome 81+, Safari 13.1+, Firefox 77+, Edge) already auto-rotates
+    // an <img> element's decoded pixels to match the EXIF orientation tag
+    // by default -- so img.naturalWidth/naturalHeight here already reflect
+    // the CORRECT, already-rotated dimensions. Re-applying our own rotation
+    // on top of that double-rotates the image, which cancels out (looks
+    // fine) for some values but produces a visibly sideways or upside-down
+    // result for 90/270-degree rotations -- exactly the kind of photo a
+    // phone held in portrait mode produces. Passing 1 here means "draw the
+    // pixels as the browser already gave them to us," which is correct.
+    const orientedCanvas = drawImageWithOrientation(img, 1);
 
     // Check transparency for ALL formats (not just PNG)
     const transparent = hasTransparency(img);
