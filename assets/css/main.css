@@ -1,3 +1,4 @@
+
 /* Smooth theme transitions */
 html {
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -112,8 +113,6 @@ html[data-theme="dark"] .theme-icon-sun {
   box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.05), var(--shadow-lg);
 }
 
-/* Dark mode drop zone enhanced */
-[data-theme="dark"] [data-theme="dark"] /* Dark mode file type tags */
 /* Dark mode select dropdown enhanced */
 [data-theme="dark"] .target-size-select {
   background-color: #111827;
@@ -440,19 +439,6 @@ main { flex: 1; }
   position: relative;
 }
 
-/* Drop Zone */
-50% { background-position: 100% 50%; }
-}
-
-/* Controls */
-.compressor-controls {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  align-items: end;
-}
-
 .control-group {
   display: flex;
   flex-direction: column;
@@ -748,6 +734,9 @@ main { flex: 1; }
   animation: spin 0.8s linear infinite;
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .processing-text {
@@ -805,6 +794,13 @@ main { flex: 1; }
   color: var(--accent);
   text-decoration: none;
   transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.target-card[aria-current="page"] {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
   box-shadow: var(--shadow);
 }
 
@@ -996,24 +992,6 @@ main { flex: 1; }
 
 .toc a:hover { color: var(--accent); }
 
-/* FAQ */
-.faq-item {
-  border-bottom: 1px solid var(--border);
-  padding: 1.25rem 0;
-}
-
-.faq-question {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.faq-answer {
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-
 /* Footer */
 .site-footer {
   background: var(--bg-secondary);
@@ -1093,8 +1071,6 @@ main { flex: 1; }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .compressor-controls { grid-template-columns: 1fr; }
-
   .preview-grid { grid-template-columns: 1fr; }
 
   .preview-meta { grid-template-columns: 1fr 1fr; }
@@ -1158,47 +1134,10 @@ main { flex: 1; }
    UPLOAD SECTION - Clean Modern Design
    ============================================================ */
 
-/* Hide default file input completely */
-/* Icon container */
-/* Main text */
-/* Subtext */
-/* Hint text */
-/* File type tags */
-/* File info display */
-/* Dark mode upload section */
-[data-theme="dark"] [data-theme="dark"] [data-theme="dark"] #output-format-select option {
+[data-theme="dark"] #output-format-select option {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 0.9375rem;
-}
-
-/* Compressor controls layout */
-.compressor-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 1.5rem;
-}
-
-.compressor-controls .control-group {
-  flex: 1 1 140px;
-  min-width: 140px;
-  max-width: 200px;
-}
-
-@media (max-width: 480px) {
-  .compressor-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .compressor-controls .control-group {
-    max-width: 100%;
-  }
-  .compressor-controls .btn-primary {
-    width: 100%;
-  }
 }
 
 /* ============================================================
@@ -1425,7 +1364,7 @@ main { flex: 1; }
   }
 }
 
-/* FAQ Accordion
+/* FAQ Accordion */
 .faq-accordion {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1516,7 +1455,7 @@ main { flex: 1; }
   border: 1px solid rgba(56, 189, 248, 0.06);
 }
 
-[data-theme="dark"] [data-theme="dark"] [data-theme="dark"] [data-theme="dark"] .faq-accordion {
+[data-theme="dark"] .faq-accordion {
   background: linear-gradient(145deg, #111827 0%, #0b0f1f 100%);
   border: 1px solid rgba(56, 189, 248, 0.06);
 }
@@ -1580,4 +1519,180 @@ main { flex: 1; }
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ============================================================
+   DARK MODE — PREMIUM ENHANCEMENTS
+   (light mode is untouched; everything below is scoped to
+   [data-theme="dark"] only)
+   ============================================================ */
+
+/* Ambient glow orbs behind the hero for depth */
+[data-theme="dark"] .hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[data-theme="dark"] .hero::before,
+[data-theme="dark"] .hero::after {
+  content: "";
+  position: absolute;
+  width: 32rem;
+  height: 32rem;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.16;
+  z-index: -1;
+  pointer-events: none;
+  animation: auroraDrift 16s ease-in-out infinite alternate;
+}
+
+[data-theme="dark"] .hero::before {
+  background: #38bdf8;
+  top: -10rem;
+  left: -8rem;
+}
+
+[data-theme="dark"] .hero::after {
+  background: #34d399;
+  bottom: -14rem;
+  right: -8rem;
+  animation-delay: -8s;
+}
+
+@keyframes auroraDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(3rem, 2rem) scale(1.15); }
+}
+
+/* Selection color */
+[data-theme="dark"] ::selection {
+  background: rgba(56, 189, 248, 0.35);
+  color: #f8fafc;
+}
+
+/* Custom scrollbar */
+[data-theme="dark"] {
+  scrollbar-color: #334155 #0b0f1f;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #0b0f1f;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+  border: 3px solid #0b0f1f;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Logo mark glow */
+[data-theme="dark"] .logo-icon {
+  background: linear-gradient(135deg, #38bdf8, #34d399);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.35));
+}
+
+/* Nav link underline glow on hover/active */
+[data-theme="dark"] .nav-link {
+  position: relative;
+}
+
+[data-theme="dark"] .nav-link:hover {
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+[data-theme="dark"] .nav-link[aria-current="page"] {
+  color: #7dd3fc;
+}
+
+/* Cards: soft glow border on hover instead of flat shadow */
+[data-theme="dark"] .card {
+  background: linear-gradient(160deg, #111827 0%, #0f172a 100%);
+  border-color: rgba(56, 189, 248, 0.08);
+}
+
+[data-theme="dark"] .card:hover {
+  border-color: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.1), 0 20px 40px -20px rgba(56, 189, 248, 0.25);
+}
+
+[data-theme="dark"] .card-icon {
+  background: rgba(56, 189, 248, 0.1);
+  color: #7dd3fc;
+}
+
+/* Compression badge glow */
+[data-theme="dark"] .compression-badge {
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.25);
+}
+
+/* Table styling */
+[data-theme="dark"] .compare-table th {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+[data-theme="dark"] .compare-table tr:hover td {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+/* TOC */
+[data-theme="dark"] .toc {
+  background: rgba(56, 189, 248, 0.04);
+  border-color: rgba(56, 189, 248, 0.1);
+}
+
+/* File info pill */
+[data-theme="dark"] #file-info {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.15);
+  color: #7dd3fc;
+}
+
+/* Progress bar glow */
+[data-theme="dark"] .progress-fill {
+  background: linear-gradient(90deg, #38bdf8, #34d399);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+/* Alerts with a touch of glass */
+[data-theme="dark"] .alert-error   { background: rgba(251, 113, 133, 0.08); }
+[data-theme="dark"] .alert-warning { background: rgba(251, 191, 36, 0.08); }
+[data-theme="dark"] .alert-success { background: rgba(52, 211, 153, 0.08); }
+
+/* Theme toggle button glow */
+[data-theme="dark"] .theme-toggle:hover,
+[data-theme="dark"] .mobile-menu-btn:hover,
+[data-theme="dark"] .more-menu-btn:hover {
+  background: rgba(56, 189, 248, 0.08);
+  color: #7dd3fc;
+}
+
+/* Currently active target-size card (used on the size-specific tool pages) */
+[data-theme="dark"] .target-card[aria-current="page"] {
+  background: linear-gradient(135deg, rgba(56,189,248,0.16) 0%, rgba(52,211,153,0.08) 100%);
+  border-color: #38bdf8;
+  color: #7dd3fc;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+/* Respect reduced-motion for the aurora effect too */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] .hero::before,
+  [data-theme="dark"] .hero::after {
+    animation: none;
+  }
 }
