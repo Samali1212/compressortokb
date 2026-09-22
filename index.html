@@ -31,7 +31,7 @@
   "featureList": "Client-side image compression, drag and drop upload, target size selection, format conversion, before/after preview, WebP and AVIF support, EXIF orientation correction, PNG transparency preservation",
   "softwareVersion": "2.0"
 }</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is this image compressor completely free?","acceptedAnswer":{"@type":"Answer","text":"Yes, Compress To KB is 100% free to use. There are no hidden fees, no watermarks, no registration requirements, and no usage limits."}},{"@type":"Question","name":"Are my images uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. All compression happens locally in your browser using JavaScript. Your images never leave your device, making this tool completely private and secure for sensitive content."}},{"@type":"Question","name":"What is the maximum file size I can compress?","acceptedAnswer":{"@type":"Answer","text":"You can upload images up to 50MB in size. However, extremely large images may take longer to process, and very high-resolution images may need to be scaled down to reach smaller target sizes."}},{"@type":"Question","name":"Will my compressed image look exactly like the original?","acceptedAnswer":{"@type":"Answer","text":"Compression always involves some trade-off between file size and visual quality. Our intelligent algorithm minimizes quality loss, but aggressive compression targets (such as 20KB for a large photo) will result in visible changes. You can preview the result before downloading."}},{"@type":"Question","name":"Does this tool work on mobile devices?","acceptedAnswer":{"@type":"Answer","text":"Yes, Compress To KB is fully responsive and works on smartphones, tablets, and desktop computers. You can compress images directly from your phone's photo gallery."}},{"@type":"Question","name":"Can I compress multiple images at once?","acceptedAnswer":{"@type":"Answer","text":"Currently, the tool processes one image at a time to ensure the best quality optimization for each file. After downloading your compressed image, you can immediately upload another."}}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Which target size should I use for a government exam form?", "acceptedAnswer": {"@type": "Answer", "text": "It depends entirely on the exam. SSC and IBPS typically cap photographs at 50KB and signatures at 20KB. UPSC, NEET, and JEE Main allow photographs up to 200KB. The new Indian passport standard allows up to 250KB. Check the table above or your exam's official notification for the exact number, then open that specific tool page &mdash; each one is pre-set to the right target."}}, {"@type": "Question", "name": "Do these size limits change between exam cycles?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, and fairly often. NTA, for instance, has changed the JEE Main photograph ceiling between 200KB and 300KB across different cycles, and India's passport photo standard changed significantly in late 2025. This site's tables reflect our research at the time of writing &mdash; always cross-check with the current official notification before submitting any form."}}, {"@type": "Question", "name": "Is Compress To KB affiliated with SSC, UPSC, IBPS, NTA, or Passport Seva?", "acceptedAnswer": {"@type": "Answer", "text": "No. Compress To KB is an independent tool and is not affiliated with, endorsed by, or connected to any government body, exam authority, or portal mentioned on this site. All exam and portal names are referenced solely to help you choose the correct compression target."}}, {"@type": "Question", "name": "Why does this tool never upload my photo anywhere?", "acceptedAnswer": {"@type": "Answer", "text": "Because compression happens entirely inside your browser using the HTML5 Canvas API, there's no server in the loop at all &mdash; which matters a lot when the image is a personal photo, ID document, or signature. Read our full Privacy Policy for the technical details."}}, {"@type": "Question", "name": "Is this tool completely free, and do I need to sign up?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, Compress To KB is completely free with no sign-up, no account, and no watermark on your downloaded image. There are no hidden limits on how many times you can use it."}}, {"@type": "Question", "name": "What image formats does Compress To KB support?", "acceptedAnswer": {"@type": "Answer", "text": "You can upload JPG, PNG, WebP, AVIF, GIF, BMP, or TIFF files. For output, choose Auto to let the tool pick the best format for your target size, or force a specific format &mdash; JPG, PNG, WebP, or AVIF &mdash; from the Output Format dropdown."}}, {"@type": "Question", "name": "Can I compress several photos at once?", "acceptedAnswer": {"@type": "Answer", "text": "Not currently &mdash; each tool page processes one image at a time so it can fully dedicate its compression search to that single file. You can immediately reset and run another image right after downloading, with no limit on repeat uses."}}, {"@type": "Question", "name": "Does Compress To KB work with HEIC photos from an iPhone?", "acceptedAnswer": {"@type": "Answer", "text": "Not directly. Our supported input formats are JPG, PNG, WebP, AVIF, GIF, BMP, and TIFF, which doesn't include Apple's HEIC format. Many iPhones convert HEIC to JPG automatically during a browser upload; if yours doesn't, switch to Settings &rarr; Camera &rarr; Formats &rarr; \"Most Compatible\" to save new photos as JPG."}}, {"@type": "Question", "name": "Does this website work properly on mobile phones?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Every tool on this site is built to work the same way on a phone's browser as on desktop &mdash; tap to browse your photo library or take a new picture, then compress and download directly to your device, with no app to install."}}, {"@type": "Question", "name": "What does 1KB actually mean on this site &mdash; 1000 bytes or 1024 bytes?", "acceptedAnswer": {"@type": "Answer", "text": "We use 1KB = 1,024 bytes, the standard binary definition used by Windows, macOS, and most software. A small number of older web portals define 1KB as exactly 1,000 bytes instead; either way, our tool's result will comfortably satisfy both definitions since it targets the number you select with some margin."}}, {"@type": "Question", "name": "What does the \"Auto\" output format option actually do?", "acceptedAnswer": {"@type": "Answer", "text": "When set to Auto, the tool checks whether your image has transparency, what your browser supports, and how small your target size is, then picks whichever format (JPG, PNG, WebP, or AVIF) is most likely to hit your target with the best visual quality. You can override this any time by selecting a specific format from the dropdown instead."}}]}</script>
 <link rel="stylesheet" href="/assets/css/main.css">
 <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
@@ -62,31 +62,6 @@
     <nav class="site-nav" aria-label="Main navigation">
       <a href="/" class="nav-link">Home</a>
       <a href="/image-compressor-to-50kb/" class="nav-link">50KB Tool</a>
-      <div class="more-menu">
-        <button id="more-tools-btn" class="more-menu-btn" aria-expanded="false" aria-haspopup="true" aria-controls="more-tools-dropdown">
-          More
-          <svg class="more-menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-        <div id="more-tools-dropdown" class="more-dropdown" role="menu">
-          <span class="more-dropdown-title">All Tools</span>
-      <a href="/image-compressor-to-20kb/">20KB Tool</a>
-      <a href="/image-compressor-to-50kb/">50KB Tool</a>
-      <a href="/image-compressor-to-75kb/">75KB Tool</a>
-      <a href="/image-compressor-to-100kb/">100KB Tool</a>
-      <a href="/image-compressor-to-125kb/">125KB Tool</a>
-      <a href="/image-compressor-to-150kb/">150KB Tool</a>
-      <a href="/image-compressor-to-175kb/">175KB Tool</a>
-      <a href="/image-compressor-to-200kb/">200KB Tool</a>
-      <a href="/image-compressor-to-225kb/">225KB Tool</a>
-      <a href="/image-compressor-to-250kb/">250KB Tool</a>
-      <a href="/image-compressor-to-275kb/">275KB Tool</a>
-      <a href="/image-compressor-to-300kb/">300KB Tool</a>
-      <a href="/image-compressor-to-350kb/">350KB Tool</a>
-      <a href="/image-compressor-to-400kb/">400KB Tool</a>
-      <a href="/image-compressor-to-450kb/">450KB Tool</a>
-      <a href="/image-compressor-to-500kb/">500KB Tool</a>
-        </div>
-      </div>
       <a href="/about/" class="nav-link">About</a>
       <a href="/contact/" class="nav-link">Contact</a>
       <a href="/blog/" class="nav-link">Blog</a>
@@ -105,25 +80,6 @@
     <div class="container">
       <a href="/" class="nav-link">Home</a>
       <a href="/image-compressor-to-50kb/" class="nav-link">50KB Tool</a>
-      <div class="mobile-more-tools">
-        <span class="mobile-more-tools-title">All Tools</span>
-      <a href="/image-compressor-to-20kb/" class="nav-link">20KB Tool</a>
-      <a href="/image-compressor-to-50kb/" class="nav-link">50KB Tool</a>
-      <a href="/image-compressor-to-75kb/" class="nav-link">75KB Tool</a>
-      <a href="/image-compressor-to-100kb/" class="nav-link">100KB Tool</a>
-      <a href="/image-compressor-to-125kb/" class="nav-link">125KB Tool</a>
-      <a href="/image-compressor-to-150kb/" class="nav-link">150KB Tool</a>
-      <a href="/image-compressor-to-175kb/" class="nav-link">175KB Tool</a>
-      <a href="/image-compressor-to-200kb/" class="nav-link">200KB Tool</a>
-      <a href="/image-compressor-to-225kb/" class="nav-link">225KB Tool</a>
-      <a href="/image-compressor-to-250kb/" class="nav-link">250KB Tool</a>
-      <a href="/image-compressor-to-275kb/" class="nav-link">275KB Tool</a>
-      <a href="/image-compressor-to-300kb/" class="nav-link">300KB Tool</a>
-      <a href="/image-compressor-to-350kb/" class="nav-link">350KB Tool</a>
-      <a href="/image-compressor-to-400kb/" class="nav-link">400KB Tool</a>
-      <a href="/image-compressor-to-450kb/" class="nav-link">450KB Tool</a>
-      <a href="/image-compressor-to-500kb/" class="nav-link">500KB Tool</a>
-      </div>
       <a href="/about/" class="nav-link">About</a>
       <a href="/contact/" class="nav-link">Contact</a>
       <a href="/blog/" class="nav-link">Blog</a>
@@ -279,6 +235,33 @@
     </div>
   </section>
 
+  <!-- Which Size Do I Need -->
+  <section class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">Which Target Size Do I Need?</h2>
+      <p class="section-subtitle">A quick map from real-world government exams, portals, and web use-cases to the right compression target. Each row links to a dedicated tool pre-set to that size.</p>
+      <div class="article" style="overflow-x:auto;">
+        <table class="compare-table" style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr><th>Target Size</th><th>Typical Use Case</th></tr>
+          </thead>
+          <tbody>
+          <tr><td><a href="/image-compressor-to-20kb/"><strong>20KB</strong></a></td><td>SSC / IBPS <strong>signature</strong> uploads</td></tr>
+          <tr><td><a href="/image-compressor-to-50kb/"><strong>50KB</strong></a></td><td>SSC / IBPS <strong>photograph</strong>, ICAI photo &amp; signature</td></tr>
+          <tr><td><a href="/image-compressor-to-75kb/"><strong>75KB</strong></a></td><td>NEET / India Post GDS photo, JEE Main / UPSC signature</td></tr>
+          <tr><td><a href="/image-compressor-to-100kb/"><strong>100KB</strong></a></td><td>JEE Main signature, India Post GDS photo, UPSC signature</td></tr>
+          <tr><td><a href="/image-compressor-to-150kb/"><strong>125&ndash;175KB</strong></a></td><td>NEET / UPSC / JEE Main photo (mid-range), blog thumbnails</td></tr>
+          <tr><td><a href="/image-compressor-to-200kb/"><strong>200KB</strong></a></td><td>UPSC / NEET / JEE Main photograph (upper limit), website hero images</td></tr>
+          <tr><td><a href="/image-compressor-to-250kb/"><strong>225&ndash;250KB</strong></a></td><td>New Indian Passport Seva digital photograph (10&ndash;250KB, 2026 standard)</td></tr>
+          <tr><td><a href="/image-compressor-to-300kb/"><strong>275&ndash;300KB</strong></a></td><td>Older passport photo guidance, marketplace &amp; e-commerce listings</td></tr>
+          <tr><td><a href="/image-compressor-to-500kb/"><strong>350&ndash;500KB</strong></a></td><td>Certificate/document scans, photography portfolios, large web banners</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.875rem;color:var(--text-secondary);margin-top:0.75rem;">Specifications are based on published exam/portal notifications researched at the time of writing and can change between application cycles &mdash; always confirm against your specific exam's current official notification before submitting.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Target Size Navigation -->
   <section class="section">
     <div class="container">
@@ -400,97 +383,108 @@
       <div class="article">
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-0">
-          What is Compress To KB?
+          Which target size should I use for a government exam form?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-0" class="faq-panel" role="region">
-          <p>Compress To KB is a free, browser-based image compression tool that lets you reduce image file sizes to specific targets like 20KB, 50KB, 100KB, and up to 500KB. All processing happens locally in your browser with no server uploads.</p>
+          <p>It depends entirely on the exam. SSC and IBPS typically cap photographs at 50KB and signatures at 20KB. UPSC, NEET, and JEE Main allow photographs up to 200KB. The new Indian passport standard allows up to 250KB. Check the table above or your exam's official notification for the exact number, then open that specific tool page &mdash; each one is pre-set to the right target.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-1">
-          How do I choose the right target size?
+          Do these size limits change between exam cycles?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-1" class="faq-panel" role="region">
-          <p>Select a target size based on where you need to use the image. Government portals often require 20KB to 50KB. Social media and web uploads typically need 50KB to 200KB. Higher quality needs like portfolios and e-commerce may use 200KB to 500KB.</p>
+          <p>Yes, and fairly often. NTA, for instance, has changed the JEE Main photograph ceiling between 200KB and 300KB across different cycles, and India's passport photo standard changed significantly in late 2025. This site's tables reflect our research at the time of writing &mdash; always cross-check with the current official notification before submitting any form.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-2">
-          What makes Compress To KB different from other tools?
+          Is Compress To KB affiliated with SSC, UPSC, IBPS, NTA, or Passport Seva?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-2" class="faq-panel" role="region">
-          <p>Unlike many online compressors, Compress To KB works entirely in your browser with no uploads to any server. It offers precise target-size compression, supports multiple output formats, provides before-and-after previews, and works on all devices including mobile phones.</p>
+          <p>No. Compress To KB is an independent tool and is not affiliated with, endorsed by, or connected to any government body, exam authority, or portal mentioned on this site. All exam and portal names are referenced solely to help you choose the correct compression target.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-3">
-          Is there a limit to how many images I can compress?
+          Why does this tool never upload my photo anywhere?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-3" class="faq-panel" role="region">
-          <p>No, there are no usage limits. You can compress as many images as you need, completely free. Each image is processed one at a time to ensure optimal quality for the target size you select.</p>
+          <p>Because compression happens entirely inside your browser using the HTML5 Canvas API, there's no server in the loop at all &mdash; which matters a lot when the image is a personal photo, ID document, or signature. Read our full <a href="/privacy-policy/">Privacy Policy</a> for the technical details.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-4">
-          Is this tool completely free to use?
+          Is this tool completely free, and do I need to sign up?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-4" class="faq-panel" role="region">
-          <p>Yes, Compress To KB is 100% free to use. There are no hidden fees, no watermarks, no registration requirements, and no usage limits. You can compress as many images as you need without any cost.</p>
+          <p>Yes, Compress To KB is completely free with no sign-up, no account, and no watermark on your downloaded image. There are no hidden limits on how many times you can use it.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-5">
-          Are my images uploaded to any server?
+          What image formats does Compress To KB support?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-5" class="faq-panel" role="region">
-          <p>No. All compression happens entirely within your browser using JavaScript. Your images never leave your device, making this tool completely private and secure for sensitive content including personal photos, documents, and proprietary images.</p>
+          <p>You can upload JPG, PNG, WebP, AVIF, GIF, BMP, or TIFF files. For output, choose Auto to let the tool pick the best format for your target size, or force a specific format &mdash; JPG, PNG, WebP, or AVIF &mdash; from the Output Format dropdown.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-6">
-          What image formats are supported?
+          Can I compress several photos at once?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-6" class="faq-panel" role="region">
-          <p>The tool supports JPG, PNG, WebP, AVIF, GIF, BMP, and TIFF as input formats. For output, you can choose between Auto (recommended), JPG, PNG, WebP, or AVIF using the Output Format dropdown.</p>
+          <p>Not currently &mdash; each tool page processes one image at a time so it can fully dedicate its compression search to that single file. You can immediately reset and run another image right after downloading, with no limit on repeat uses.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-7">
-          Can I compress multiple images at once?
+          Does Compress To KB work with HEIC photos from an iPhone?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-7" class="faq-panel" role="region">
-          <p>Currently, the tool processes one image at a time to ensure the best quality optimization for each file. After downloading your compressed image, you can immediately upload another file without refreshing the page.</p>
+          <p>Not directly. Our supported input formats are JPG, PNG, WebP, AVIF, GIF, BMP, and TIFF, which doesn't include Apple's HEIC format. Many iPhones convert HEIC to JPG automatically during a browser upload; if yours doesn't, switch to Settings &rarr; Camera &rarr; Formats &rarr; "Most Compatible" to save new photos as JPG.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-8">
-          Why is my compressed image larger than the target size?
+          Does this website work properly on mobile phones?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-8" class="faq-panel" role="region">
-          <p>Some images contain too much detail or are too large in dimensions to reach the target size without unacceptable quality loss. In such cases, the tool will compress as close as possible to the target and show you the actual result with a before-and-after preview.</p>
+          <p>Yes. Every tool on this site is built to work the same way on a phone's browser as on desktop &mdash; tap to browse your photo library or take a new picture, then compress and download directly to your device, with no app to install.</p>
         </div>
       </div>
       <div class="faq-item">
         <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-9">
-          Does compression reduce image quality?
+          What does 1KB actually mean on this site &mdash; 1000 bytes or 1024 bytes?
           <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <div id="faq-panel-9" class="faq-panel" role="region">
-          <p>Yes, image compression always involves some quality reduction to achieve a smaller file size. However, our tool uses intelligent algorithms to minimize visible quality loss while reaching your target size. The preview lets you decide if the result meets your needs before downloading.</p>
+          <p>We use 1KB = 1,024 bytes, the standard binary definition used by Windows, macOS, and most software. A small number of older web portals define 1KB as exactly 1,000 bytes instead; either way, our tool's result will comfortably satisfy both definitions since it targets the number you select with some margin.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-toggle" aria-expanded="false" aria-controls="faq-panel-10">
+          What does the "Auto" output format option actually do?
+          <svg class="faq-toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="faq-panel-10" class="faq-panel" role="region">
+          <p>When set to Auto, the tool checks whether your image has transparency, what your browser supports, and how small your target size is, then picks whichever format (JPG, PNG, WebP, or AVIF) is most likely to hit your target with the best visual quality. You can override this any time by selecting a specific format from the dropdown instead.</p>
         </div>
       </div>
       </div>
     </div>
   </section>
+
+
 
   <!-- Related Tools -->
   <section class="section section-alt">
