@@ -64,13 +64,16 @@
   }
 
   function supportsAvif() {
-    if (_avifSupport !== null) return _avifSupport;
+    if (_avifSupport !== null) return Promise.resolve(_avifSupport);
     return new Promise((resolve) => {
-      if (_avifSupport !== null) { resolve(_avifSupport); return; }
       const canvas = document.createElement('canvas');
       canvas.width = 1; canvas.height = 1;
       canvas.toBlob((blob) => {
-        _avifSupport = !!blob;
+        // Per the HTML spec, canvas.toBlob() silently falls back to PNG when
+        // the requested type isn't supported by the browser -- so a truthy
+        // blob does NOT prove AVIF encoding actually happened. We must check
+        // that the browser honoured the requested type.
+        _avifSupport = !!blob && blob.type === CONFIG.AVIF_FORMAT;
         resolve(_avifSupport);
       }, CONFIG.AVIF_FORMAT);
     });
@@ -138,16 +141,27 @@
   }
 
   function getSuggestedOutputFormat(originalMime, hasAlpha, targetKB, userFormat) {
-    // If user selected a specific format, validate and use it
+    // If user selected a specific format, validate and use it.
+    // NOTE: the <select> options carry full MIME strings ("image/jpeg",
+    // "image/png", "image/webp", "image/avif"), so we must compare against
+    // those exact values -- comparing against short codes like "jpg"/"webp"
+    // would never match and would silently fall through to auto-detection,
+    // ignoring the user's explicit choice.
     if (userFormat && userFormat !== 'auto') {
       var fmt = userFormat.toLowerCase();
-      if (fmt === 'jpg' || fmt === 'jpeg') return CONFIG.DEFAULT_FORMAT;
-      if (fmt === 'png') return CONFIG.PNG_FORMAT;
-      if (fmt === 'webp' && supportsWebP()) return CONFIG.WEBP_FORMAT;
-      if (fmt === 'avif' && _avifSupport) return CONFIG.AVIF_FORMAT;
-      // Fallback if selected format not supported
-      if (fmt === 'webp' && !supportsWebP()) return CONFIG.DEFAULT_FORMAT;
-      if (fmt === 'avif' && !_avifSupport) return supportsWebP() ? CONFIG.WEBP_FORMAT : CONFIG.DEFAULT_FORMAT;
+      if (fmt === 'image/jpeg' || fmt === 'image/jpg' || fmt === 'jpg' || fmt === 'jpeg') {
+        return CONFIG.DEFAULT_FORMAT;
+      }
+      if (fmt === 'image/png' || fmt === 'png') {
+        return CONFIG.PNG_FORMAT;
+      }
+      if (fmt === 'image/webp' || fmt === 'webp') {
+        return supportsWebP() ? CONFIG.WEBP_FORMAT : CONFIG.DEFAULT_FORMAT;
+      }
+      if (fmt === 'image/avif' || fmt === 'avif') {
+        if (_avifSupport) return CONFIG.AVIF_FORMAT;
+        return supportsWebP() ? CONFIG.WEBP_FORMAT : CONFIG.DEFAULT_FORMAT;
+      }
     }
     // Auto mode: use existing intelligent selection
     if (hasAlpha) {
@@ -261,8 +275,8 @@
     const transform = getOrientationTransform(orientation);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const w = img.naturalWidth;
-    const h = img.naturalHeight;
+    let w = img.naturalWidth;
+    let h = img.naturalHeight;
 
     // Mobile crash protection: cap initial dimensions at 2560px
     const MAX_DIMENSION = 2560;
@@ -554,7 +568,15 @@
         width: result.canvas ? result.canvas.width : orientedCanvas.width,
         height: result.canvas ? result.canvas.height : orientedCanvas.height
       },
-      format: outputFormat,
+      // Always trust the actual encoded blob's MIME type over the format we
+      // merely intended to request. Per the HTML spec, canvas.toBlob() can
+      // silently substitute a different format (typically PNG) when the
+      // requested type isn't actually supported by the browser -- so
+      // outputFormat is only a request, not a guarantee. Using blob.type
+      // here ensures the on-screen label and the downloaded file's
+      // extension always match what was truly produced, never what was
+      // merely asked for.
+      format: result.blob.type || outputFormat,
       quality: result.quality,
       reachedTarget: result.blob.size <= targetBytes,
       targetSize: targetKB
@@ -787,22 +809,6 @@
   }
 
   // =====================
-  // Mobile Menu
-  // =====================
-  function toggleMobileMenu() {
-    if (!els.mobileNav || !els.mobileMenuBtn) return;
-    const willOpen = els.mobileNav.hidden;
-    els.mobileNav.hidden = !willOpen;
-    if (willOpen) {
-      els.mobileNav.classList.add('active');
-    } else {
-      els.mobileNav.classList.remove('active');
-    }
-    els.mobileMenuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-    els.mobileMenuBtn.setAttribute('aria-label', willOpen ? 'Close menu' : 'Open menu');
-  }
-
-  // =====================
   // Populate Target Size Select
   // =====================
   function populateTargetSelect() {
@@ -816,16 +822,6 @@
       if (t.value === state.targetSizeKB) opt.selected = true;
       els.targetSizeSelect.appendChild(opt);
     }
-  }
-
-  // =====================
-  // Theme Management (runs after inline init)
-  // =====================
-  function toggleTheme() {
-    var current = document.documentElement.getAttribute('data-theme');
-    var next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch(e) {}
   }
 
   // Listen for system theme changes
@@ -876,12 +872,12 @@
       mobileNav: document.getElementById('mobile-nav')
     };
 
-    // Theme toggle
-    els.themeToggle && els.themeToggle.addEventListener('click', toggleTheme);
+    // Theme toggle and mobile menu are handled globally by main.js on every
+    // page (including pages that don't load this file), so this tool script
+    // must not attach its own duplicate handlers here -- doing so previously
+    // caused both handlers to fire on a single click and cancel each other
+    // out, making the theme button and mobile menu appear completely broken.
     listenSystemTheme();
-
-    // Mobile menu
-    els.mobileMenuBtn && els.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
 
     // Target size from page config
     var pageTarget = window.COMPRESSOR_CONFIG && window.COMPRESSOR_CONFIG.targetSizeKB;
@@ -907,7 +903,8 @@
     els.dropZone && els.dropZone.addEventListener('drop', handleDrop);
 
     // Keyboard accessibility for drop zone
-    
+    els.dropZone && els.dropZone.addEventListener('keydown', handleDropZoneKeyDown);
+
     // Compress button
     els.compressBtn && els.compressBtn.addEventListener('click', handleCompress);
     els.resetBtn && els.resetBtn.addEventListener('click', resetCompressor);
@@ -917,28 +914,6 @@
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && els.compressBtn && !els.compressBtn.disabled) {
         e.preventDefault();
         handleCompress();
-      }
-    });
-
-    // Close mobile menu on outside click
-    document.addEventListener('click', function(e) {
-      if (els.mobileNav && els.mobileNav.classList.contains('active')) {
-        if (!els.mobileNav.contains(e.target) && !els.mobileMenuBtn.contains(e.target)) {
-          els.mobileNav.classList.remove('active');
-          els.mobileNav.hidden = true;
-          els.mobileMenuBtn.setAttribute('aria-expanded', 'false');
-          els.mobileMenuBtn.setAttribute('aria-label', 'Open menu');
-        }
-      }
-    });
-
-    // Close mobile menu on Escape
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && els.mobileNav && els.mobileNav.classList.contains('active')) {
-        els.mobileNav.classList.remove('active');
-        els.mobileNav.hidden = true;
-        els.mobileMenuBtn.setAttribute('aria-expanded', 'false');
-        els.mobileMenuBtn.setAttribute('aria-label', 'Open menu');
       }
     });
   }
