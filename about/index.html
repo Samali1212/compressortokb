@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About - Compress To KB</title>
+<meta name="description" content="Learn about Compress To KB. A free, privacy-focused, browser-based image compression tool. No uploads, no tracking, completely client-side processing.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://compressortokb.com/about/">
+<meta property="og:title" content="About - Compress To KB">
+<meta property="og:description" content="Learn about Compress To KB. A free, privacy-focused, browser-based image compression tool.">
+<meta property="og:url" content="https://compressortokb.com/about/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://compressortokb.com/assets/icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<script>
+(function(){
+  try {
+    var s = localStorage.getItem('theme');
+    var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var t = s || (d ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', t);
+  } catch(e) {}
+})();
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<noscript>
+  <div class="noscript-notice" role="alert">
+    JavaScript is required to use Compress To KB. Please enable JavaScript in your browser settings.
+  </div>
+</noscript>
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="logo" aria-label="Compress To KB Home">
+      <span class="logo-icon">CK</span>
+      <span>Compress To KB</span>
+    </a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/image-compressor-to-50kb/" class="nav-link">50KB Tool</a>
+      <a href="/about/" class="nav-link">About</a>
+      <a href="/contact/" class="nav-link">Contact</a>
+      <a href="/blog/" class="nav-link">Blog</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+        <svg class="theme-icon theme-icon-sun" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <svg class="theme-icon theme-icon-moon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      </button>
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    </div>
+  </div>
+  <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation" hidden>
+    <div class="container">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/image-compressor-to-50kb/" class="nav-link">50KB Tool</a>
+      <a href="/about/" class="nav-link">About</a>
+      <a href="/contact/" class="nav-link">Contact</a>
+      <a href="/blog/" class="nav-link">Blog</a>
+      <a href="/privacy-policy/" class="nav-link">Privacy Policy</a>
+    </div>
+  </nav>
+</header>
+<main id="main-content">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <div class="container">
+      <a href="/">Home</a> <span class="sep">/</span> <span>About</span>
+    </div>
+  </nav>
+  <section class="hero" style="padding-top:2rem;">
+    <div class="container">
+      <h1 class="hero-title">About Compress To KB</h1>
+      <p class="hero-subtitle">A free, private, and powerful image compression tool that runs entirely in your browser.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container article">
+      <p>Compress To KB was built with a simple mission: to provide fast, free, and genuinely private image compression for everyone. Unlike most online image tools, we do not upload your images to a server. All compression happens directly in your web browser using JavaScript and the HTML5 Canvas API.</p>
+      <h2>Why We Built This Tool</h2>
+      <p>Most image compression services require you to upload your files to a remote server. This creates privacy risks, especially when working with sensitive photos, confidential documents, or proprietary images. We believe your data should stay on your device. By building a fully client-side compression engine, we eliminate the need for uploads entirely.</p>
+      <h2>How It Works</h2>
+      <p>When you drop an image into our tool, it is loaded into your browser's memory using the FileReader API. The image is then drawn onto an HTML canvas, where we can read pixel data and re-encode it at different quality levels. Our intelligent binary search algorithm tests multiple quality settings to find the best balance between file size and visual fidelity for your chosen target.</p>
+      <p>If quality adjustment alone cannot reach your target size, the tool intelligently scales down the image dimensions. Because file size scales roughly with the square of image dimensions, even a modest reduction in width and height can significantly reduce file size while preserving more quality than simply compressing harder.</p>
+      <h2>Supported Formats</h2>
+      <p>We support JPEG, PNG, WebP, and AVIF output. GIF, BMP, and TIFF files can be read and converted to these formats. Our tool automatically detects the best output format for your image type. Photographs are typically converted to WebP for superior compression, while images with transparency are preserved in PNG or WebP as appropriate. If your browser supports AVIF, we may use it for very small target sizes where its compression advantages are most pronounced.</p>
+      <h2>Our Commitment to Privacy</h2>
+      <p>Privacy is not a feature we added later. It is the foundation of how this tool was designed. No image data is ever sent over the network. No analytics capture your images. No third-party compression APIs are used. Your files remain on your device from start to finish.</p>
+      <h2>Open Web Standards</h2>
+      <p>Compress To KB is built entirely on open web standards: HTML5, CSS3, and vanilla JavaScript. We do not rely on heavy frameworks, external libraries, or proprietary technologies. This keeps the tool lightweight, fast, and compatible with all modern browsers.</p>
+
+      <h2 style="margin-top:2.5rem;">Behind the Project</h2>
+      <p>Compress To KB was built by a passionate web developer who believes that online tools should respect user privacy. Frustrated by image compression services that upload photos to remote servers, this tool was designed from the ground up to run entirely in your browser using the HTML5 Canvas API.</p>
+      <p>The goal is simple: give users a fast, reliable, and completely private way to compress images for government job applications, exam forms, document uploads, and web optimization, without ever worrying about data leaks or server storage.</p>
+      <p style="margin-top:1rem;padding:1rem 1.25rem;background:var(--bg-secondary);border-radius:var(--radius);border-left:4px solid var(--accent);"><em>"Your images are yours. They should never leave your device just to be resized."</em></p>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <span class="logo-icon">CK</span>
+          <span>Compress To KB</span>
+        </div>
+        <p class="footer-desc">Free, fast, and private image compression tools that run entirely in your browser. No uploads, no tracking, no limits.</p>
+      </div>
+      <div>
+        <h3 class="footer-title">Tools</h3>
+        <ul class="footer-links">
+          <li><a href="/image-compressor-to-50kb/">Compress to 50KB</a></li>
+          <li><a href="/image-compressor-to-100kb/">Compress to 100KB</a></li>
+          <li><a href="/image-compressor-to-200kb/">Compress to 200KB</a></li>
+          <li><a href="/image-compressor-to-500kb/">Compress to 500KB</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer-title">Company</h3>
+        <ul class="footer-links">
+          <li><a href="/about/">About</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/contact/">Contact</a></li>
+          <li><a href="/privacy-policy/">Privacy Policy</a></li>
+          <li><a href="/terms/">Terms of Service</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer-title">Legal</h3>
+        <ul class="footer-links">
+          <li><a href="/disclaimer/">Disclaimer</a></li>
+          <li><a href="/privacy-policy/">Data Privacy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Compressortokb. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+<script src="/assets/js/main.js?v=4" defer></script>
+</body>
+</html>
