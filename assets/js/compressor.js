@@ -17,9 +17,20 @@
     MAX_HEIGHT: 4096,
     MIN_QUALITY: 0.05,
     MAX_QUALITY: 0.92,
-    QUALITY_TOLERANCE: 0.02,
-    MAX_ITERATIONS: 18,
+    // How close the final size must land to the target before we stop searching, as a
+    // fraction of the target (0.01 = within 1%). Kept tight so a 500KB target reliably lands
+    // in the ~495-500KB range instead of stopping early with room left on the table.
+    QUALITY_TOLERANCE: 0.01,
+    MAX_ITERATIONS: 20,
     MAX_SCALE_ATTEMPTS: 10,
+    // PNG has no quality knob (it's lossless), so hitting a target size means binary-searching
+    // on pixel dimensions instead, measuring the REAL encoded size at each candidate scale.
+    PNG_MIN_SCALE: 0.02,
+    PNG_SCALE_ITERATIONS: 16,
+    // If a full-resolution decode fails (common on mobile for 48MP+ phone camera photos that
+    // exceed the tab's available decode memory), retry asking the browser to decode directly
+    // at this size instead of ever allocating the full-resolution pixel buffer.
+    BITMAP_RESIZE_FALLBACK: 2000,
     DEFAULT_FORMAT: 'image/jpeg',
     PNG_FORMAT: 'image/png',
     WEBP_FORMAT: 'image/webp',
@@ -185,54 +196,10 @@
   // =====================
   // EXIF Orientation Fix
   // =====================
-  function readOrientation(file) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const view = new DataView(e.target.result);
-          if (view.getUint16(0, false) !== 0xFFD8) { resolve(1); return; }
-          let length = view.byteLength;
-          let offset = 2;
-          while (offset < length) {
-            if (view.getUint8(offset) !== 0xFF) { offset++; continue; }
-            const marker = view.getUint8(offset + 1);
-            if (marker === 0xD9 || marker === 0xDA) break; // EOI, SOS
-            if (marker === 0xE1) { // APP1 (EXIF)
-              const segmentLength = view.getUint16(offset + 2, false);
-              const exifOffset = offset + 4;
-              if (view.getUint32(exifOffset, false) === 0x45786966) { // "Exif"
-                const tiffStart = exifOffset + 6;
-                const little = view.getUint16(tiffStart, false) === 0x4949;
-                const dirOffset = view.getUint32(tiffStart + 4, little) + tiffStart;
-                const numEntries = view.getUint16(dirOffset, little);
-                for (let i = 0; i < numEntries; i++) {
-                  const entryOffset = dirOffset + 2 + i * 12;
-                  if (view.getUint16(entryOffset, little) === 0x0112) {
-                    resolve(view.getUint16(entryOffset + 8, little));
-                    return;
-                  }
-                }
-              }
-              offset += 2 + segmentLength;
-            } else if (marker >= 0xE0 && marker <= 0xEF) {
-              offset += 2 + view.getUint16(offset + 2, false);
-            } else if (marker >= 0xD0 && marker <= 0xD9) {
-              offset += 2;
-            } else {
-              offset += 2 + view.getUint16(offset + 2, false);
-            }
-          }
-        } catch (err) {
-          // Silently fall back to orientation 1
-        }
-        resolve(1);
-      };
-      reader.onerror = () => resolve(1);
-      reader.readAsArrayBuffer(file.slice(0, 65536));
-    });
-  }
-
+  // NOTE: we no longer manually parse EXIF bytes to detect rotation. Every decode path below
+  // (createImageBitmap with imageOrientation:'from-image', and the modern-browser <img> auto-
+  // rotation fallback) already gives us correctly-oriented pixels, so a manual byte-level EXIF
+  // reader would be dead code that only costs time reading each file twice.
   function getOrientationTransform(orientation) {
     const map = {
       1: { rotate: 0, flipH: false },
@@ -259,44 +226,119 @@
     });
   }
 
-  function fileToDataUrl(file) {
-    return new Promise((resolve, reject) => {
+  // =====================
+  // Cheap header-only dimension read (no full decode)
+  // =====================
+  // createImageBitmap's resizeWidth/resizeHeight options do NOT preserve aspect ratio when
+  // BOTH are given -- they stretch the decoded image to exactly that box (verified: an 8000x6000
+  // source came out a distorted 2000x2000). To ask for a resize that keeps the correct aspect
+  // ratio we must supply only ONE of the two dimensions, which means knowing in advance whether
+  // the image is wider or taller. This reads just the image header (a few dozen bytes) to get
+  // real width/height without decoding any pixels, so it stays cheap even for huge files.
+  function readImageDimensionsFromHeader(file) {
+    return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
+      reader.onload = function(e) {
+        try {
+          const view = new DataView(e.target.result);
+          const len = view.byteLength;
+
+          // PNG: 8-byte signature, then IHDR chunk with width/height as big-endian uint32s.
+          if (len > 24 && view.getUint32(0) === 0x89504e47 && view.getUint32(4) === 0x0d0a1a0a) {
+            resolve({ width: view.getUint32(16), height: view.getUint32(20) });
+            return;
+          }
+
+          // JPEG: walk markers looking for a Start-Of-Frame segment.
+          if (len > 4 && view.getUint16(0, false) === 0xFFD8) {
+            let offset = 2;
+            while (offset < len - 8) {
+              if (view.getUint8(offset) !== 0xFF) { offset++; continue; }
+              const marker = view.getUint8(offset + 1);
+              if (marker === 0x01 || (marker >= 0xD0 && marker <= 0xD9)) { offset += 2; continue; }
+              const segLen = view.getUint16(offset + 2, false);
+              const isSOF = (marker >= 0xC0 && marker <= 0xC3) || (marker >= 0xC5 && marker <= 0xC7) ||
+                            (marker >= 0xC9 && marker <= 0xCB) || (marker >= 0xCD && marker <= 0xCF);
+              if (isSOF) {
+                resolve({ height: view.getUint16(offset + 5, false), width: view.getUint16(offset + 7, false) });
+                return;
+              }
+              offset += 2 + segLen;
+            }
+          }
+
+          // WebP (lossy VP8, lossless VP8L, extended VP8X).
+          if (len > 30 && view.getUint32(0, false) === 0x52494646 && view.getUint32(8, false) === 0x57454250) {
+            const fourcc = view.getUint32(12, false);
+            if (fourcc === 0x56503820) { // 'VP8 '
+              resolve({ width: view.getUint16(26, true) & 0x3fff, height: view.getUint16(28, true) & 0x3fff });
+              return;
+            }
+            if (fourcc === 0x56503858) { // 'VP8X'
+              const w = (view.getUint8(24) | (view.getUint8(25) << 8) | (view.getUint8(26) << 16)) + 1;
+              const h = (view.getUint8(27) | (view.getUint8(28) << 8) | (view.getUint8(29) << 16)) + 1;
+              resolve({ width: w, height: h });
+              return;
+            }
+            if (fourcc === 0x5650384c) { // 'VP8L'
+              const b0 = view.getUint8(21), b1 = view.getUint8(22), b2 = view.getUint8(23), b3 = view.getUint8(24);
+              const w = 1 + (((b1 & 0x3f) << 8) | b0);
+              const h = 1 + (((b3 & 0x0f) << 10) | (b2 << 2) | ((b1 & 0xc0) >> 6));
+              resolve({ width: w, height: h });
+              return;
+            }
+          }
+        } catch (err) {
+          // fall through to null below
+        }
+        resolve(null);
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsArrayBuffer(file.slice(0, 65536));
     });
+  }
+
+  // =====================
+  // Shared dimension capping
+  // =====================
+  // Used by every decode path so mobile devices never have to hold a canvas larger than they
+  // can safely allocate, and so the final compressed pixel dimensions are consistent no matter
+  // which decode route produced them.
+  function capDimensions(w, h) {
+    // Mobile crash protection: cap initial dimensions at 2560px
+    const MAX_DIMENSION = 2560;
+    let drawW = w, drawH = h;
+    if (drawW > MAX_DIMENSION || drawH > MAX_DIMENSION) {
+      if (drawW > drawH) {
+        drawH = Math.round((drawH * MAX_DIMENSION) / drawW);
+        drawW = MAX_DIMENSION;
+      } else {
+        drawW = Math.round((drawW * MAX_DIMENSION) / drawH);
+        drawH = MAX_DIMENSION;
+      }
+    }
+    // Absolute hard cap regardless of device
+    if (drawW > CONFIG.MAX_WIDTH || drawH > CONFIG.MAX_HEIGHT) {
+      const scale = Math.min(CONFIG.MAX_WIDTH / drawW, CONFIG.MAX_HEIGHT / drawH);
+      drawW = Math.floor(drawW * scale);
+      drawH = Math.floor(drawH * scale);
+    }
+    return { width: Math.max(1, drawW), height: Math.max(1, drawH) };
   }
 
   // =====================
   // Canvas Drawing with Orientation
   // =====================
+  // Only used by the legacy <img> fallback path below (createImageBitmap decodes already come
+  // out correctly oriented). orientation is always passed as 1 from that path on modern
+  // browsers, since they already auto-rotate <img> pixels per EXIF -- but the rotate/flip
+  // branches are kept intact as a safety net for any caller that does need them.
   function drawImageWithOrientation(img, orientation) {
     const transform = getOrientationTransform(orientation);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    let w = img.naturalWidth;
-    let h = img.naturalHeight;
-
-    // Mobile crash protection: cap initial dimensions at 2560px
-    const MAX_DIMENSION = 2560;
-    if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
-      if (w > h) {
-        h = Math.round((h * MAX_DIMENSION) / w);
-        w = MAX_DIMENSION;
-      } else {
-        w = Math.round((w * MAX_DIMENSION) / h);
-        h = MAX_DIMENSION;
-      }
-    }
-
-    // Cap dimensions to prevent browser crash
-    let drawW = w, drawH = h;
-    if (w > CONFIG.MAX_WIDTH || h > CONFIG.MAX_HEIGHT) {
-      const scale = Math.min(CONFIG.MAX_WIDTH / w, CONFIG.MAX_HEIGHT / h);
-      drawW = Math.floor(w * scale);
-      drawH = Math.floor(h * scale);
-    }
+    const capped = capDimensions(img.naturalWidth, img.naturalHeight);
+    const drawW = capped.width, drawH = capped.height;
 
     const swap = [5,6,7,8].includes(orientation);
     canvas.width = swap ? drawH : drawW;
@@ -337,17 +379,97 @@
   }
 
   // =====================
+  // ImageBitmap decode path (preferred)
+  // =====================
+  function supportsCreateImageBitmap() {
+    return typeof window !== 'undefined' && typeof window.createImageBitmap === 'function';
+  }
+
+  function bitmapToCanvas(bitmap) {
+    const capped = capDimensions(bitmap.width, bitmap.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = capped.width;
+    canvas.height = capped.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, capped.width, capped.height);
+    if (typeof bitmap.close === 'function') bitmap.close();
+    return canvas;
+  }
+
+  // =====================
+  // Decode Pipeline
+  // =====================
+  // Three tiers, tried in order:
+  //   1. createImageBitmap at full resolution -- fast, memory-efficient, auto-orients via EXIF.
+  //   2. createImageBitmap asking the browser to decode straight to a smaller size -- this is
+  //      the fix for the "Failed to load image" error seen on mobile Chrome with large phone-
+  //      camera photos: a plain <img> decode must allocate the FULL-resolution pixel buffer
+  //      before anything else can happen, and 48MP/108MP camera sensors (8000x6000 and up)
+  //      routinely exceed what a mobile tab is allowed to allocate for that -- so the decode
+  //      itself fails before our own downscaling logic ever gets a chance to run. Asking
+  //      createImageBitmap to resize DURING decode means that oversized buffer is never
+  //      allocated in the first place.
+  //   3. Legacy <img> + object URL -- for the rare browser without createImageBitmap support.
+  async function decodeToCanvas(file, mimeType) {
+    if (supportsCreateImageBitmap()) {
+      try {
+        const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        return bitmapToCanvas(bitmap);
+      } catch (err) {
+        try {
+          // Passing BOTH resizeWidth and resizeHeight stretches the image to that exact box
+          // (verified: it silently distorts aspect ratio), so we read the true dimensions from
+          // the file header first and only constrain whichever side is longer -- the browser
+          // then computes the other side itself, preserving the original aspect ratio.
+          const dims = await readImageDimensionsFromHeader(file);
+          const resizeOpts = { imageOrientation: 'from-image', resizeQuality: 'high' };
+          if (dims && dims.width > 0 && dims.height > 0) {
+            if (dims.width >= dims.height) {
+              resizeOpts.resizeWidth = Math.min(dims.width, CONFIG.BITMAP_RESIZE_FALLBACK);
+            } else {
+              resizeOpts.resizeHeight = Math.min(dims.height, CONFIG.BITMAP_RESIZE_FALLBACK);
+            }
+          } else {
+            // Couldn't read a header we recognize (e.g. GIF/BMP) -- fall back to constraining
+            // width only. This still shrinks a landscape or square image correctly; a very tall
+            // portrait image may decode larger than ideal, but capDimensions() below still caps
+            // the final canvas either way, so this is a safe, non-distorting worst case.
+            resizeOpts.resizeWidth = CONFIG.BITMAP_RESIZE_FALLBACK;
+          }
+          const bitmap = await createImageBitmap(file, resizeOpts);
+          return bitmapToCanvas(bitmap);
+        } catch (err2) {
+          // Fall through to the <img> fallback below.
+        }
+      }
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const img = await loadImage(objectUrl);
+      // Modern browsers (Chrome 81+, Safari 13.1+, Firefox 77+, Edge) already auto-rotate an
+      // <img> element's decoded pixels per the file's EXIF tag, so passing orientation 1 ("no
+      // extra rotation") here is correct -- reapplying our own rotation on top of the
+      // browser's would double-rotate 90/270-degree photos.
+      return drawImageWithOrientation(img, 1);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  // =====================
   // Check Transparency - ALL formats
   // =====================
-  function hasTransparency(img) {
-    // Check if the image actually has any transparent pixels
+  // Source-agnostic: accepts anything drawImage() accepts (canvas, <img>, ImageBitmap) plus
+  // its dimensions, so it works the same regardless of which decode path produced the image.
+  function hasTransparency(source, sourceWidth, sourceHeight) {
     const canvas = document.createElement('canvas');
-    const w = Math.min(img.naturalWidth, 200);
-    const h = Math.min(img.naturalHeight, 200);
+    const w = Math.min(sourceWidth, 200);
+    const h = Math.min(sourceHeight, 200);
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
+    ctx.drawImage(source, 0, 0, w, h);
     try {
       const data = ctx.getImageData(0, 0, w, h).data;
       for (let i = 3; i < data.length; i += 4) {
@@ -395,22 +517,13 @@
   // =====================
   // Binary Search Compression
   // =====================
-  async function compressWithBinarySearch(canvas, outputFormat, targetBytes, hasAlpha) {
+  async function compressWithBinarySearch(canvas, outputFormat, targetBytes) {
     let lowQ = CONFIG.MIN_QUALITY;
     let highQ = CONFIG.MAX_QUALITY;
     let bestBlob = null;
     let bestQuality = lowQ;
     let bestSizeDiff = Infinity;
-
-    // PNG is lossless - quality parameter has no effect
-    if (outputFormat === CONFIG.PNG_FORMAT) {
-      const currentBytes = canvas.width * canvas.height * 4;
-      let scale = estimateScaleForTarget(currentBytes, targetBytes);
-      scale = Math.max(scale, 0.05);
-      const scaled = await scaleCanvas(canvas, scale);
-      const blob = await canvasToBlob(scaled, outputFormat, 1);
-      return { blob, quality: 1, scale, canvas: scaled };
-    }
+    let bestIsUnderTarget = false;
 
     for (let i = 0; i < CONFIG.MAX_ITERATIONS; i++) {
       const midQ = (lowQ + highQ) / 2;
@@ -422,15 +535,22 @@
       }
 
       const sizeDiff = Math.abs(blob.size - targetBytes);
+      const isUnderTarget = blob.size <= targetBytes;
 
-      if (blob.size <= targetBytes && sizeDiff < bestSizeDiff) {
+      // Once we've found ANY candidate that fits within the target, an over-target candidate
+      // can never replace it -- overshooting the user's requested size is never an acceptable
+      // trade for a numerically closer size. Before that point, we track the closest
+      // over-target attempt as a best-effort fallback (used only if the target truly can't be
+      // reached by quality alone, e.g. even minimum quality is still too big).
+      const isBetter = isUnderTarget
+        ? (!bestIsUnderTarget || sizeDiff < bestSizeDiff)
+        : (!bestIsUnderTarget && sizeDiff < bestSizeDiff);
+
+      if (isBetter) {
         bestBlob = blob;
         bestQuality = midQ;
         bestSizeDiff = sizeDiff;
-      } else if (!bestBlob && blob.size < bestSizeDiff) {
-        bestBlob = blob;
-        bestQuality = midQ;
-        bestSizeDiff = sizeDiff;
+        bestIsUnderTarget = isUnderTarget;
       }
 
       if (blob.size > targetBytes) {
@@ -439,10 +559,73 @@
         lowQ = midQ;
       }
 
-      if (sizeDiff < targetBytes * CONFIG.QUALITY_TOLERANCE) break;
+      if (isUnderTarget && sizeDiff < targetBytes * CONFIG.QUALITY_TOLERANCE) break;
     }
 
     return { blob: bestBlob, quality: bestQuality, scale: 1, canvas: canvas };
+  }
+
+  // =====================
+  // PNG Target-Size Compression
+  // =====================
+  // PNG is lossless, so there is no quality knob to search over -- the only lever available is
+  // pixel dimensions. The previous approach *estimated* a scale from the theoretical
+  // uncompressed bitmap size (width * height * 4 bytes/px) and applied it once. Real PNG
+  // compression ratios vary hugely with image content and are almost always far smaller than
+  // that raw estimate, so that formula reliably overestimated how much shrinking was needed --
+  // e.g. a 500KB target landing around 160KB. Instead we binary-search on scale and measure the
+  // REAL encoded size at each candidate, the same way the lossy path searches on quality.
+  async function compressPngToTarget(canvas, targetBytes) {
+    const fullBlob = await canvasToBlob(canvas, CONFIG.PNG_FORMAT, 1);
+    if (!fullBlob) {
+      return { blob: null, quality: 1, scale: 1, canvas: canvas };
+    }
+    // Already fits at full resolution -- that's the best possible quality, no need to shrink.
+    if (fullBlob.size <= targetBytes) {
+      return { blob: fullBlob, quality: 1, scale: 1, canvas: canvas };
+    }
+
+    let loScale = CONFIG.PNG_MIN_SCALE;
+    let hiScale = 1;
+    let bestBlob = null;
+    let bestScale = loScale;
+    let bestCanvas = canvas;
+
+    for (let i = 0; i < CONFIG.PNG_SCALE_ITERATIONS; i++) {
+      const midScale = (loScale + hiScale) / 2;
+      const scaledCanvas = await scaleCanvas(canvas, midScale);
+      const blob = await canvasToBlob(scaledCanvas, CONFIG.PNG_FORMAT, 1);
+
+      if (!blob) {
+        hiScale = midScale;
+        continue;
+      }
+
+      if (blob.size <= targetBytes) {
+        // Fits -- keep it if it's the largest (best quality) fit found so far, then try a
+        // larger scale to see if we can get even closer to the target from below.
+        if (!bestBlob || blob.size > bestBlob.size) {
+          bestBlob = blob;
+          bestScale = midScale;
+          bestCanvas = scaledCanvas;
+        }
+        loScale = midScale;
+      } else {
+        hiScale = midScale;
+      }
+
+      if (hiScale - loScale < 0.004) break;
+    }
+
+    if (!bestBlob) {
+      // Even the smallest scale tried didn't fit (extremely rare -- e.g. dense noise at a very
+      // small target). Return the smallest attempt as a best-effort result rather than nothing.
+      const scaledCanvas = await scaleCanvas(canvas, loScale);
+      const blob = await canvasToBlob(scaledCanvas, CONFIG.PNG_FORMAT, 1);
+      return { blob, quality: 1, scale: loScale, canvas: scaledCanvas };
+    }
+
+    return { blob: bestBlob, quality: 1, scale: bestScale, canvas: bestCanvas };
   }
 
   // =====================
@@ -473,57 +656,21 @@
 
     setProgress(1, 'Reading image...');
 
-    // Read orientation and prepare the image source in parallel.
-    // NOTE: we intentionally use URL.createObjectURL() here instead of
-    // FileReader.readAsDataURL(). Converting a whole file to a base64
-    // data URL string requires holding the entire encoded file in memory
-    // at once (roughly 1.33x the file size, plus string overhead), which
-    // reliably fails with "Failed to read file" on mobile Chrome for the
-    // large JPEGs modern phone cameras produce (48MP/108MP sensors easily
-    // save 10-25MB photos), even though desktop Chrome has enough memory
-    // headroom to handle it. createObjectURL() just hands the browser a
-    // lightweight reference to the file instead, so no large in-memory
-    // copy is ever made.
-    const [orientation, imgSrc] = await Promise.all([
-      mimeType === 'image/jpeg' ? readOrientation(file) : Promise.resolve(1),
-      Promise.resolve(URL.createObjectURL(file))
-    ]);
+    // Decode the file into an oriented, size-capped canvas. This goes through
+    // createImageBitmap first (memory-efficient, auto-orients via EXIF, and retries with a
+    // resize hint if the full-resolution decode fails -- the fix for "Failed to load image" on
+    // mobile with large phone-camera photos), falling back to <img> for older browsers.
+    let orientedCanvas;
+    try {
+      orientedCanvas = await decodeToCanvas(file, mimeType);
+    } catch (err) {
+      throw new Error('Could not load this image. It may be corrupted or in a format your browser can\'t decode. Please try a different file.');
+    }
 
     setProgress(2, 'Analyzing image...');
 
-    let img;
-    try {
-      img = await loadImage(imgSrc);
-    } finally {
-      // The pixels are decoded into the Image element by the time
-      // loadImage() resolves (or never will be, if it rejected), so the
-      // object URL itself is no longer needed either way.
-      URL.revokeObjectURL(imgSrc);
-    }
-
-    // Check dimensions and warn if too large
-    if (img.naturalWidth > 8000 || img.naturalHeight > 8000) {
-      throw new Error('Image dimensions are too large. Maximum supported is 8000x8000 pixels.');
-    }
-
-    // Draw with correct orientation.
-    //
-    // IMPORTANT: We intentionally do NOT re-apply the EXIF orientation
-    // correction here, even though `orientation` (read from the raw file
-    // bytes above) may be a rotated value like 6. Every modern browser
-    // (Chrome 81+, Safari 13.1+, Firefox 77+, Edge) already auto-rotates
-    // an <img> element's decoded pixels to match the EXIF orientation tag
-    // by default -- so img.naturalWidth/naturalHeight here already reflect
-    // the CORRECT, already-rotated dimensions. Re-applying our own rotation
-    // on top of that double-rotates the image, which cancels out (looks
-    // fine) for some values but produces a visibly sideways or upside-down
-    // result for 90/270-degree rotations -- exactly the kind of photo a
-    // phone held in portrait mode produces. Passing 1 here means "draw the
-    // pixels as the browser already gave them to us," which is correct.
-    const orientedCanvas = drawImageWithOrientation(img, 1);
-
     // Check transparency for ALL formats (not just PNG)
-    const transparent = hasTransparency(img);
+    const transparent = hasTransparency(orientedCanvas, orientedCanvas.width, orientedCanvas.height);
 
     // Pre-check AVIF support
     await supportsAvif();
@@ -536,38 +683,46 @@
 
     setProgress(3, 'Compressing...');
 
-    // Step 1: Try quality-only compression first
-    let result = await compressWithBinarySearch(orientedCanvas, outputFormat, targetBytes, transparent);
-
-    // Step 2: If still too large, try iterative scaling
-    let attempts = 0;
+    let result;
     let currentCanvas = orientedCanvas;
 
-    while ((!result.blob || result.blob.size > targetBytes * 1.05) && attempts < CONFIG.MAX_SCALE_ATTEMPTS) {
-      const currentSize = result.blob ? result.blob.size : (currentCanvas.width * currentCanvas.height * 3);
-      let scale = estimateScaleForTarget(currentSize, targetBytes);
-      // Apply diminishing scale for each attempt (gradual reduction)
-      scale = Math.max(0.03, scale * Math.pow(0.92, attempts));
+    if (outputFormat === CONFIG.PNG_FORMAT) {
+      // PNG is lossless: fit the target by measured-size binary search on scale (see
+      // compressPngToTarget), not by a quality search or an unmeasured formula estimate.
+      result = await compressPngToTarget(orientedCanvas, targetBytes);
+      if (result.canvas) currentCanvas = result.canvas;
+    } else {
+      // Step 1: Try quality-only compression first
+      result = await compressWithBinarySearch(orientedCanvas, outputFormat, targetBytes);
 
-      currentCanvas = await scaleCanvas(currentCanvas, scale);
-      result = await compressWithBinarySearch(currentCanvas, outputFormat, targetBytes, transparent);
-      attempts++;
+      // Step 2: If still too large, try iterative scaling
+      let attempts = 0;
+      while ((!result.blob || result.blob.size > targetBytes * 1.05) && attempts < CONFIG.MAX_SCALE_ATTEMPTS) {
+        const currentSize = result.blob ? result.blob.size : (currentCanvas.width * currentCanvas.height * 3);
+        let scale = estimateScaleForTarget(currentSize, targetBytes);
+        // Apply diminishing scale for each attempt (gradual reduction)
+        scale = Math.max(0.03, scale * Math.pow(0.92, attempts));
 
-      if (result.blob && result.blob.size <= targetBytes) break;
+        currentCanvas = await scaleCanvas(currentCanvas, scale);
+        result = await compressWithBinarySearch(currentCanvas, outputFormat, targetBytes);
+        attempts++;
+
+        if (result.blob && result.blob.size <= targetBytes) break;
+      }
     }
 
     // Step 3: If still too large and we used PNG, try lossy format
     // Only auto-override if user did NOT explicitly select PNG
     if ((!result.blob || result.blob.size > targetBytes) && outputFormat === CONFIG.PNG_FORMAT && !transparent && userFormat === 'auto') {
       const lossyFormat = supportsWebP() ? CONFIG.WEBP_FORMAT : CONFIG.DEFAULT_FORMAT;
-      result = await compressWithBinarySearch(currentCanvas, lossyFormat, targetBytes, false);
+      result = await compressWithBinarySearch(currentCanvas, lossyFormat, targetBytes);
       if (result.blob) outputFormat = lossyFormat;
     }
 
     // Step 4: If still too large with JPEG, try WebP
     // Only auto-override if user did NOT explicitly select JPEG
     if ((!result.blob || result.blob.size > targetBytes) && outputFormat === CONFIG.DEFAULT_FORMAT && supportsWebP() && userFormat === 'auto') {
-      result = await compressWithBinarySearch(currentCanvas, CONFIG.WEBP_FORMAT, targetBytes, transparent);
+      result = await compressWithBinarySearch(currentCanvas, CONFIG.WEBP_FORMAT, targetBytes);
       if (result.blob) outputFormat = CONFIG.WEBP_FORMAT;
     }
 
