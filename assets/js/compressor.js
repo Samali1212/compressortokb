@@ -1,4 +1,3 @@
-
 /**
  * Image Compressor Hub - Core Engine v2.0
  * 100% client-side image compression
@@ -196,10 +195,57 @@
   // =====================
   // EXIF Orientation Fix
   // =====================
-  // NOTE: we no longer manually parse EXIF bytes to detect rotation. Every decode path below
-  // (createImageBitmap with imageOrientation:'from-image', and the modern-browser <img> auto-
-  // rotation fallback) already gives us correctly-oriented pixels, so a manual byte-level EXIF
-  // reader would be dead code that only costs time reading each file twice.
+  // Used only by the fallback decode tiers below that deliberately skip createImageBitmap's
+  // 'imageOrientation' option (in case that option itself is what a given browser build
+  // chokes on) -- in that case we must determine and apply the rotation ourselves.
+  function readOrientation(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const view = new DataView(e.target.result);
+          if (view.getUint16(0, false) !== 0xFFD8) { resolve(1); return; }
+          let length = view.byteLength;
+          let offset = 2;
+          while (offset < length) {
+            if (view.getUint8(offset) !== 0xFF) { offset++; continue; }
+            const marker = view.getUint8(offset + 1);
+            if (marker === 0xD9 || marker === 0xDA) break; // EOI, SOS
+            if (marker === 0xE1) { // APP1 (EXIF)
+              const segmentLength = view.getUint16(offset + 2, false);
+              const exifOffset = offset + 4;
+              if (view.getUint32(exifOffset, false) === 0x45786966) { // "Exif"
+                const tiffStart = exifOffset + 6;
+                const little = view.getUint16(tiffStart, false) === 0x4949;
+                const dirOffset = view.getUint32(tiffStart + 4, little) + tiffStart;
+                const numEntries = view.getUint16(dirOffset, little);
+                for (let i = 0; i < numEntries; i++) {
+                  const entryOffset = dirOffset + 2 + i * 12;
+                  if (view.getUint16(entryOffset, little) === 0x0112) {
+                    resolve(view.getUint16(entryOffset + 8, little));
+                    return;
+                  }
+                }
+              }
+              offset += 2 + segmentLength;
+            } else if (marker >= 0xE0 && marker <= 0xEF) {
+              offset += 2 + view.getUint16(offset + 2, false);
+            } else if (marker >= 0xD0 && marker <= 0xD9) {
+              offset += 2;
+            } else {
+              offset += 2 + view.getUint16(offset + 2, false);
+            }
+          }
+        } catch (err) {
+          // Silently fall back to orientation 1
+        }
+        resolve(1);
+      };
+      reader.onerror = () => resolve(1);
+      reader.readAsArrayBuffer(file.slice(0, 65536));
+    });
+  }
+
   function getOrientationTransform(orientation) {
     const map = {
       1: { rotate: 0, flipH: false },
@@ -329,15 +375,15 @@
   // =====================
   // Canvas Drawing with Orientation
   // =====================
-  // Only used by the legacy <img> fallback path below (createImageBitmap decodes already come
-  // out correctly oriented). orientation is always passed as 1 from that path on modern
-  // browsers, since they already auto-rotate <img> pixels per EXIF -- but the rotate/flip
-  // branches are kept intact as a safety net for any caller that does need them.
-  function drawImageWithOrientation(img, orientation) {
+  // Source-agnostic: works with anything drawImage() accepts (<img> or ImageBitmap). Needed by
+  // both the legacy <img> fallback (orientation always 1 there -- modern browsers already
+  // auto-rotate <img> pixels) and the createImageBitmap tiers that deliberately skip the
+  // 'imageOrientation' option and so must apply EXIF rotation manually.
+  function drawSourceWithOrientation(source, srcWidth, srcHeight, orientation, isBitmap) {
     const transform = getOrientationTransform(orientation);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const capped = capDimensions(img.naturalWidth, img.naturalHeight);
+    const capped = capDimensions(srcWidth, srcHeight);
     const drawW = capped.width, drawH = capped.height;
 
     const swap = [5,6,7,8].includes(orientation);
@@ -358,24 +404,29 @@
       case 90:
         ctx.translate(cx, cy);
         ctx.rotate(Math.PI / 2);
-        ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+        ctx.drawImage(source, -drawW / 2, -drawH / 2, drawW, drawH);
         break;
       case 180:
         ctx.translate(cx, cy);
         ctx.rotate(Math.PI);
-        ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+        ctx.drawImage(source, -drawW / 2, -drawH / 2, drawW, drawH);
         break;
       case 270:
         ctx.translate(cx, cy);
         ctx.rotate(-Math.PI / 2);
-        ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+        ctx.drawImage(source, -drawW / 2, -drawH / 2, drawW, drawH);
         break;
       default:
-        ctx.drawImage(img, 0, 0, drawW, drawH);
+        ctx.drawImage(source, 0, 0, drawW, drawH);
     }
 
     ctx.restore();
+    if (isBitmap && typeof source.close === 'function') source.close();
     return canvas;
+  }
+
+  function drawImageWithOrientation(img, orientation) {
+    return drawSourceWithOrientation(img, img.naturalWidth, img.naturalHeight, orientation, false);
   }
 
   // =====================
@@ -410,51 +461,102 @@
   //      createImageBitmap to resize DURING decode means that oversized buffer is never
   //      allocated in the first place.
   //   3. Legacy <img> + object URL -- for the rare browser without createImageBitmap support.
+  function describeErr(err) {
+    if (!err) return 'unknown error';
+    var name = err.name ? err.name + ': ' : '';
+    return name + (err.message || String(err));
+  }
+
+  // Tried in order, falling through on failure:
+  //   1. createImageBitmap, full resolution, browser auto-orientation.
+  //   2. createImageBitmap, full resolution, NO options at all -- defends against a browser
+  //      build where the 'imageOrientation' option itself is what throws (rare, but cheap to
+  //      guard against); we then read EXIF and rotate manually.
+  //   3. createImageBitmap with a resize hint (+ auto-orientation) -- the fix for large phone-
+  //      camera photos exceeding a mobile tab's decode memory budget: asking the browser to
+  //      resize DURING decode means the oversized full-res buffer is never allocated.
+  //   4. Same resize hint, no options -- same reasoning as (2), for the resize path.
+  //   5. Legacy <img> + object URL -- for browsers without createImageBitmap, or as a last
+  //      resort if every ImageBitmap attempt above failed.
+  // Every failed attempt is logged to the console (invisible to normal users, visible in
+  // DevTools) so a future report can be root-caused from real error names instead of guesses.
   async function decodeToCanvas(file, mimeType) {
+    const diagnostics = [];
+
     if (supportsCreateImageBitmap()) {
       try {
         const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
         return bitmapToCanvas(bitmap);
       } catch (err) {
-        try {
-          // Passing BOTH resizeWidth and resizeHeight stretches the image to that exact box
-          // (verified: it silently distorts aspect ratio), so we read the true dimensions from
-          // the file header first and only constrain whichever side is longer -- the browser
-          // then computes the other side itself, preserving the original aspect ratio.
-          const dims = await readImageDimensionsFromHeader(file);
-          const resizeOpts = { imageOrientation: 'from-image', resizeQuality: 'high' };
-          if (dims && dims.width > 0 && dims.height > 0) {
-            if (dims.width >= dims.height) {
-              resizeOpts.resizeWidth = Math.min(dims.width, CONFIG.BITMAP_RESIZE_FALLBACK);
-            } else {
-              resizeOpts.resizeHeight = Math.min(dims.height, CONFIG.BITMAP_RESIZE_FALLBACK);
-            }
-          } else {
-            // Couldn't read a header we recognize (e.g. GIF/BMP) -- fall back to constraining
-            // width only. This still shrinks a landscape or square image correctly; a very tall
-            // portrait image may decode larger than ideal, but capDimensions() below still caps
-            // the final canvas either way, so this is a safe, non-distorting worst case.
-            resizeOpts.resizeWidth = CONFIG.BITMAP_RESIZE_FALLBACK;
-          }
-          const bitmap = await createImageBitmap(file, resizeOpts);
-          return bitmapToCanvas(bitmap);
-        } catch (err2) {
-          // Fall through to the <img> fallback below.
+        diagnostics.push('bitmap-full+orientation: ' + describeErr(err));
+      }
+
+      try {
+        const bitmap = await createImageBitmap(file);
+        const orientation = mimeType === 'image/jpeg' ? await readOrientation(file) : 1;
+        return drawSourceWithOrientation(bitmap, bitmap.width, bitmap.height, orientation, true);
+      } catch (err) {
+        diagnostics.push('bitmap-full-plain: ' + describeErr(err));
+      }
+
+      // Passing BOTH resizeWidth and resizeHeight stretches the image to that exact box
+      // (verified: it silently distorts aspect ratio), so we read the true dimensions from
+      // the file header first and only constrain whichever side is longer -- the browser
+      // then computes the other side itself, preserving the original aspect ratio.
+      const dims = await readImageDimensionsFromHeader(file);
+      const resizeBase = {};
+      if (dims && dims.width > 0 && dims.height > 0) {
+        if (dims.width >= dims.height) {
+          resizeBase.resizeWidth = Math.min(dims.width, CONFIG.BITMAP_RESIZE_FALLBACK);
+        } else {
+          resizeBase.resizeHeight = Math.min(dims.height, CONFIG.BITMAP_RESIZE_FALLBACK);
         }
+      } else {
+        // Couldn't read a header we recognize (e.g. GIF/BMP) -- fall back to constraining
+        // width only. This still shrinks a landscape or square image correctly; a very tall
+        // portrait image may decode larger than ideal, but capDimensions() below still caps
+        // the final canvas either way, so this is a safe, non-distorting worst case.
+        resizeBase.resizeWidth = CONFIG.BITMAP_RESIZE_FALLBACK;
+      }
+
+      try {
+        const opts = Object.assign({ imageOrientation: 'from-image', resizeQuality: 'high' }, resizeBase);
+        const bitmap = await createImageBitmap(file, opts);
+        return bitmapToCanvas(bitmap);
+      } catch (err) {
+        diagnostics.push('bitmap-resize+orientation: ' + describeErr(err));
+      }
+
+      try {
+        const opts = Object.assign({ resizeQuality: 'high' }, resizeBase);
+        const bitmap = await createImageBitmap(file, opts);
+        const orientation = mimeType === 'image/jpeg' ? await readOrientation(file) : 1;
+        return drawSourceWithOrientation(bitmap, bitmap.width, bitmap.height, orientation, true);
+      } catch (err) {
+        diagnostics.push('bitmap-resize-plain: ' + describeErr(err));
       }
     }
 
-    const objectUrl = URL.createObjectURL(file);
     try {
-      const img = await loadImage(objectUrl);
-      // Modern browsers (Chrome 81+, Safari 13.1+, Firefox 77+, Edge) already auto-rotate an
-      // <img> element's decoded pixels per the file's EXIF tag, so passing orientation 1 ("no
-      // extra rotation") here is correct -- reapplying our own rotation on top of the
-      // browser's would double-rotate 90/270-degree photos.
-      return drawImageWithOrientation(img, 1);
-    } finally {
-      URL.revokeObjectURL(objectUrl);
+      const objectUrl = URL.createObjectURL(file);
+      try {
+        const img = await loadImage(objectUrl);
+        // Modern browsers (Chrome 81+, Safari 13.1+, Firefox 77+, Edge) already auto-rotate an
+        // <img> element's decoded pixels per the file's EXIF tag, so passing orientation 1 ("no
+        // extra rotation") here is correct -- reapplying our own rotation on top of the
+        // browser's would double-rotate 90/270-degree photos.
+        return drawImageWithOrientation(img, 1);
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch (err) {
+      diagnostics.push('img-fallback: ' + describeErr(err));
     }
+
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('[CompressToKB] All image decode attempts failed for "' + (file && file.name) + '": ' + diagnostics.join(' | '));
+    }
+    throw new Error('All decode attempts failed');
   }
 
   // =====================
