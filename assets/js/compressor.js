@@ -1,3 +1,4 @@
+
 /**
  * Image Compressor Hub - Core Engine v2.0
  * 100% client-side image compression
@@ -15,13 +16,30 @@
     MAX_WIDTH: 4096,
     MAX_HEIGHT: 4096,
     MIN_QUALITY: 0.05,
-    MAX_QUALITY: 0.92,
+    // Previously capped at 0.92, which is a low ceiling for WebP/AVIF specifically -- both are
+    // efficient enough that quality 0.92 can already look near-lossless while landing well
+    // under a generous target (e.g. a 500KB target ending up at 260-350KB), leaving quality
+    // headroom unused. Raised so the search can use it when the target allows.
+    MAX_QUALITY: 0.97,
     // How close the final size must land to the target before we stop searching, as a
     // fraction of the target (0.01 = within 1%). Kept tight so a 500KB target reliably lands
     // in the ~495-500KB range instead of stopping early with room left on the table.
     QUALITY_TOLERANCE: 0.01,
     MAX_ITERATIONS: 20,
     MAX_SCALE_ATTEMPTS: 10,
+    // Hard wall-clock caps so a slow codec (AVIF encoding in particular can take 500ms-1s+ PER
+    // ATTEMPT on a large canvas) can never turn a 20-iteration search into a 20-30+ second
+    // freeze. Each individual binary-search call is capped at SEARCH_TIME_MS; the whole
+    // compression pipeline (initial search + any rescale attempts) is capped at TOTAL_TIME_MS.
+    // Hitting either cap returns the best result found so far instead of continuing to search.
+    SEARCH_TIME_MS: 3000,
+    TOTAL_TIME_MS: 9000,
+    // The deadline above is a worst-case safety net, not the normal exit path -- without a
+    // floor, a momentarily slow device/tab (background load, thermal throttling) could cut the
+    // search off after only 2-3 iterations, giving a noticeably less precise result than the
+    // exact same image would get a moment later. Guaranteeing this many iterations first keeps
+    // results consistent run-to-run; the deadline only kicks in beyond this floor.
+    MIN_ITERATIONS: 5,
     // PNG has no quality knob (it's lossless), so hitting a target size means binary-searching
     // on pixel dimensions instead, measuring the REAL encoded size at each candidate scale.
     PNG_MIN_SCALE: 0.02,
@@ -619,13 +637,14 @@
   // =====================
   // Binary Search Compression
   // =====================
-  async function compressWithBinarySearch(canvas, outputFormat, targetBytes) {
+  async function compressWithBinarySearch(canvas, outputFormat, targetBytes, deadline) {
     let lowQ = CONFIG.MIN_QUALITY;
     let highQ = CONFIG.MAX_QUALITY;
     let bestBlob = null;
     let bestQuality = lowQ;
     let bestSizeDiff = Infinity;
     let bestIsUnderTarget = false;
+    const hardDeadline = deadline || (Date.now() + CONFIG.SEARCH_TIME_MS);
 
     for (let i = 0; i < CONFIG.MAX_ITERATIONS; i++) {
       const midQ = (lowQ + highQ) / 2;
@@ -662,6 +681,12 @@
       }
 
       if (isUnderTarget && sizeDiff < targetBytes * CONFIG.QUALITY_TOLERANCE) break;
+
+      // A slow codec (WebP/AVIF especially) can take 500ms-1s+ per attempt on a large canvas --
+      // without this, a device/format combo that never hits the tolerance above would run the
+      // full MAX_ITERATIONS regardless of how long that actually takes in wall-clock time. The
+      // MIN_ITERATIONS floor keeps results consistent run-to-run (see CONFIG comment).
+      if (i + 1 >= CONFIG.MIN_ITERATIONS && Date.now() >= hardDeadline) break;
     }
 
     return { blob: bestBlob, quality: bestQuality, scale: 1, canvas: canvas };
@@ -677,8 +702,25 @@
   // that raw estimate, so that formula reliably overestimated how much shrinking was needed --
   // e.g. a 500KB target landing around 160KB. Instead we binary-search on scale and measure the
   // REAL encoded size at each candidate, the same way the lossy path searches on quality.
-  async function compressPngToTarget(canvas, targetBytes) {
-    const fullBlob = await canvasToBlob(canvas, CONFIG.PNG_FORMAT, 1);
+  // =====================
+  // Resolution-based Target-Size Compression (PNG, AVIF)
+  // =====================
+  // Used for any format where canvas.toBlob's quality parameter doesn't (usefully) control
+  // output size, so the only lever available is pixel dimensions -- same approach as the PNG
+  // fix above: binary-search on scale, measuring the REAL encoded size at each candidate.
+  //
+  // AVIF needs this too: per the Canvas API spec, the quality argument to canvas.toBlob only
+  // applies "if the requested type is image/jpeg or image/webp" -- for every other type
+  // (including image/avif) the browser's default quality is used regardless of what's passed.
+  // Confirmed empirically: canvas.toBlob(canvas, 'image/avif', q) produced byte-identical output
+  // for q from 0.5 to 1.0. The previous code ran AVIF through the same quality-based binary
+  // search as JPEG/WebP, which wasted many iterations with zero effect (each one still doing a
+  // real, somewhat expensive AVIF encode) and only ever shrank the file via the outer
+  // resolution-fallback loop -- slow AND imprecise. Routing AVIF here instead searches the one
+  // lever that actually works, directly.
+  async function compressByScaleSearch(canvas, outputFormat, targetBytes, deadline) {
+    const hardDeadline = deadline || (Date.now() + CONFIG.SEARCH_TIME_MS);
+    const fullBlob = await canvasToBlob(canvas, outputFormat, 1);
     if (!fullBlob) {
       return { blob: null, quality: 1, scale: 1, canvas: canvas };
     }
@@ -696,7 +738,7 @@
     for (let i = 0; i < CONFIG.PNG_SCALE_ITERATIONS; i++) {
       const midScale = (loScale + hiScale) / 2;
       const scaledCanvas = await scaleCanvas(canvas, midScale);
-      const blob = await canvasToBlob(scaledCanvas, CONFIG.PNG_FORMAT, 1);
+      const blob = await canvasToBlob(scaledCanvas, outputFormat, 1);
 
       if (!blob) {
         hiScale = midScale;
@@ -717,13 +759,14 @@
       }
 
       if (hiScale - loScale < 0.004) break;
+      if (i + 1 >= CONFIG.MIN_ITERATIONS && Date.now() >= hardDeadline) break;
     }
 
     if (!bestBlob) {
       // Even the smallest scale tried didn't fit (extremely rare -- e.g. dense noise at a very
       // small target). Return the smallest attempt as a best-effort result rather than nothing.
       const scaledCanvas = await scaleCanvas(canvas, loScale);
-      const blob = await canvasToBlob(scaledCanvas, CONFIG.PNG_FORMAT, 1);
+      const blob = await canvasToBlob(scaledCanvas, outputFormat, 1);
       return { blob, quality: 1, scale: loScale, canvas: scaledCanvas };
     }
 
@@ -785,28 +828,45 @@
 
     setProgress(3, 'Compressing...');
 
+    // Overall wall-clock budget for the ENTIRE compression pipeline below. Each individual
+    // binary search is already capped at CONFIG.SEARCH_TIME_MS, but without this, a device/
+    // format combo slow enough to hit that cap on every attempt could still chain several
+    // attempts back-to-back into a long freeze (e.g. AVIF: several rescale attempts x several
+    // seconds each). Once this is exceeded, we stop trying to get closer and ship the best
+    // result found so far rather than continuing to search.
+    const overallDeadline = Date.now() + CONFIG.TOTAL_TIME_MS;
+    function nextDeadline() {
+      return Math.min(Date.now() + CONFIG.SEARCH_TIME_MS, overallDeadline);
+    }
+
     let result;
     let currentCanvas = orientedCanvas;
 
-    if (outputFormat === CONFIG.PNG_FORMAT) {
-      // PNG is lossless: fit the target by measured-size binary search on scale (see
-      // compressPngToTarget), not by a quality search or an unmeasured formula estimate.
-      result = await compressPngToTarget(orientedCanvas, targetBytes);
+    if (outputFormat === CONFIG.PNG_FORMAT || outputFormat === CONFIG.AVIF_FORMAT) {
+      // PNG is lossless, and AVIF's quality parameter is a documented no-op in the Canvas API --
+      // both fit the target by measured-size binary search on scale (see compressByScaleSearch),
+      // not by a quality search that has no real effect for AVIF.
+      result = await compressByScaleSearch(orientedCanvas, outputFormat, targetBytes, nextDeadline());
       if (result.canvas) currentCanvas = result.canvas;
     } else {
       // Step 1: Try quality-only compression first
-      result = await compressWithBinarySearch(orientedCanvas, outputFormat, targetBytes);
+      result = await compressWithBinarySearch(orientedCanvas, outputFormat, targetBytes, nextDeadline());
 
-      // Step 2: If still too large, try iterative scaling
+      // Step 2: If still too large, try iterative scaling (bounded by both attempt count and
+      // the overall time budget -- whichever comes first)
       let attempts = 0;
-      while ((!result.blob || result.blob.size > targetBytes * 1.05) && attempts < CONFIG.MAX_SCALE_ATTEMPTS) {
+      while (
+        (!result.blob || result.blob.size > targetBytes * 1.05) &&
+        attempts < CONFIG.MAX_SCALE_ATTEMPTS &&
+        Date.now() < overallDeadline
+      ) {
         const currentSize = result.blob ? result.blob.size : (currentCanvas.width * currentCanvas.height * 3);
         let scale = estimateScaleForTarget(currentSize, targetBytes);
         // Apply diminishing scale for each attempt (gradual reduction)
         scale = Math.max(0.03, scale * Math.pow(0.92, attempts));
 
         currentCanvas = await scaleCanvas(currentCanvas, scale);
-        result = await compressWithBinarySearch(currentCanvas, outputFormat, targetBytes);
+        result = await compressWithBinarySearch(currentCanvas, outputFormat, targetBytes, nextDeadline());
         attempts++;
 
         if (result.blob && result.blob.size <= targetBytes) break;
@@ -817,14 +877,14 @@
     // Only auto-override if user did NOT explicitly select PNG
     if ((!result.blob || result.blob.size > targetBytes) && outputFormat === CONFIG.PNG_FORMAT && !transparent && userFormat === 'auto') {
       const lossyFormat = supportsWebP() ? CONFIG.WEBP_FORMAT : CONFIG.DEFAULT_FORMAT;
-      result = await compressWithBinarySearch(currentCanvas, lossyFormat, targetBytes);
+      result = await compressWithBinarySearch(currentCanvas, lossyFormat, targetBytes, nextDeadline());
       if (result.blob) outputFormat = lossyFormat;
     }
 
     // Step 4: If still too large with JPEG, try WebP
     // Only auto-override if user did NOT explicitly select JPEG
     if ((!result.blob || result.blob.size > targetBytes) && outputFormat === CONFIG.DEFAULT_FORMAT && supportsWebP() && userFormat === 'auto') {
-      result = await compressWithBinarySearch(currentCanvas, CONFIG.WEBP_FORMAT, targetBytes);
+      result = await compressWithBinarySearch(currentCanvas, CONFIG.WEBP_FORMAT, targetBytes, nextDeadline());
       if (result.blob) outputFormat = CONFIG.WEBP_FORMAT;
     }
 
