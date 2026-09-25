@@ -2,10 +2,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NH7BCRJJBH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-NH7BCRJJBH');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How to Optimize E-Commerce Product Images for Faster Sales | Compress To KB</title>
-<meta name="description" content="Practical tips for balancing sharp product detail with fast page loads, using responsive images and the right compression target for every part of your store.">
+<title>Optimize E-Commerce Product Images for Sales | Blog</title>
+<meta name="description" content="Practical tips for balancing sharp product detail with fast page loads, using responsive images and the right compression target for your store.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://compressortokb.com/blog/optimize-ecommerce-images-sales/">
 <meta property="og:title" content="How to Optimize E-Commerce Product Images for Faster Sales | Compress To KB">
@@ -93,25 +102,62 @@
   </section>
   <section class="section">
     <div class="container article">
+<p style="font-size:0.875rem;color:var(--text-secondary);border-left:3px solid var(--accent);padding-left:0.75rem;margin-bottom:1.5rem;">Written and reviewed by the <a href="/about/">Compress To KB editorial team</a>. Last updated September 24, 2026. We build and maintain the compressor this guide refers to, so what we say about how it behaves comes from its actual code and from day-to-day use, not from guesswork.</p>
 
-<p>Slow-loading product galleries are one of the most common, and most fixable, causes of cart abandonment. Shoppers expect product pages to feel instant, and every extra second of load time measurably hurts conversion rates. Image weight is almost always the biggest culprit.</p>
+<p>Product photos do two jobs that pull in opposite directions. They have to look good enough to convince someone to pay, and they have to load quickly enough that the shopper is still there when they appear. Most stores lean too far in one direction: either raw camera files that make category pages crawl, or over-squeezed thumbnails that make the product look cheap. This guide shows how to find the middle, image by image, using target file sizes you can actually apply.</p>
 
-<h2>Different Images Need Different Targets</h2>
-<p>Not every product image needs the same file size. A grid of thumbnails on a category page benefits far more from aggressive compression than a single full-size zoom image on a product detail page:</p>
+<h2>Why Image Weight Hits Stores Harder</h2>
+<p>A blog post has one or two large images. A category page can have forty. If each product thumbnail is 600KB, the page weighs more than 20MB before you count scripts, and the shopper on a phone gives up scrolling long before the bottom. Because store pages multiply images, small savings per image compound quickly. Cutting a thumbnail from 600KB to 90KB across forty products removes roughly twenty megabytes from one page view. The link to search performance is covered in our guide to <a href="/blog/image-size-core-web-vitals-mobile-seo/">image size and Core Web Vitals</a>, but even without any ranking effect, shoppers simply notice slow pages.</p>
+
+<h2>Give Each Image Role Its Own Target</h2>
+<p>The mistake we see most often is applying one size to everything. A better approach is to decide by role:</p>
 <ul>
-<li><strong>Category/grid thumbnails:</strong> <a href="/image-compressor-to-100kb/">100KB</a> or smaller keeps listing pages snappy even with dozens of products on screen</li>
-<li><strong>Main product image:</strong> <a href="/image-compressor-to-250kb/">250KB</a>&ndash;<a href="/image-compressor-to-300kb/">300KB</a> preserves colour accuracy and texture that shoppers rely on to judge quality</li>
-<li><strong>Zoom/detail views:</strong> <a href="/image-compressor-to-500kb/">500KB</a> gives fine detail like fabric weave or stitching room to stay sharp</li>
+<li><strong>Category-grid thumbnails:</strong> 60–120KB. They display small and appear in bulk, so use the <a href="/image-compressor-to-100kb/">100KB tool</a> or even the <a href="/image-compressor-to-75kb/">75KB tool</a> for very dense grids.</li>
+<li><strong>Main product image:</strong> 200–300KB. This is the picture doing the selling, and the <a href="/image-compressor-to-250kb/">250KB</a> or <a href="/image-compressor-to-300kb/">300KB</a> tool usually preserves the texture and colour buyers rely on.</li>
+<li><strong>Gallery and zoom images:</strong> 350–500KB. Fine detail such as stitching, engraving or a printed ingredient list is the reason people zoom, so give it room with the <a href="/image-compressor-to-350kb/">350KB</a> or <a href="/image-compressor-to-500kb/">500KB</a> tool.</li>
+<li><strong>Marketplace and classified listings:</strong> 200–275KB. Buyers there judge condition, not style, so clarity beats file size. The <a href="/image-compressor-to-275kb/">275KB tool</a> was designed with this in mind.</li>
+<li><strong>Email and social promotions:</strong> 150–175KB, the range covered by the <a href="/image-compressor-to-150kb/">150KB</a> and <a href="/image-compressor-to-175kb/">175KB</a> tools.</li>
 </ul>
+<p>Treat those as starting points. A plain white sneaker on a clean background compresses far better than a knitted jumper, so a smooth product can sit at the lower end of its range while a textured one needs the upper end.</p>
 
-<h2>Use Responsive Images with srcset</h2>
-<p>Serving one giant image to every device wastes bandwidth on mobile shoppers. Pairing compressed images at a few different sizes with the <code>srcset</code> attribute lets the browser choose the most appropriate file for each visitor's screen automatically.</p>
+<h2>Start From a Good Master File</h2>
+<p>Compression is applied last, not first. Shoot or export a clean master at a sensible size, something like 2000 pixels on the long edge is plenty for most stores, and keep it. Then create your compressed versions from that master, never from a previous compressed file. Every lossy save loses a little more, and re-compressing an already compressed JPEG stacks the artifacts. This is worth remembering because many platforms, including several hosted store builders, re-encode your uploads on their own image servers. If your upload is already squeezed to the limit, their conversion will squeeze it again. Upload something moderately generous, and let the platform do its final trim.</p>
 
-<h2>Batch-Optimize Before You Upload</h2>
-<p>Because Compress To KB runs entirely in your browser, you can compress each product photo to the right target size before uploading it to your store platform (Shopify, WooCommerce, or any CMS), rather than relying on the platform's own automatic optimization, which is often less precise about hitting a specific target size.</p>
+<h2>Colour Accuracy Is a Trust Issue</h2>
+<p>Returns caused by "it did not look like the photo" are expensive. Two habits help. First, shoot under consistent neutral light and check that your whites are actually white before you compress. Second, remember that browsers and canvases work in the sRGB colour space. If your camera or editor exported in a wider gamut such as Display P3, the compressed output will be converted to sRGB and very saturated colours can shift slightly. Check a vivid product, such as a red or a deep teal, side by side with the original before batch-processing a whole catalogue. If the shift is noticeable, adjust the colour in your editor and export again. It is a small check that prevents a large batch of disappointing images.</p>
+
+<h2>Mind the Detail Buyers Actually Zoom Into</h2>
+<p>Look at your own analytics or heatmaps if you have them: people zoom into labels, textures and connectors. Text on packaging is the first thing to turn to mush under heavy compression, because JPEG creates small ringing artifacts around sharp edges. If a label must remain readable, give that image a bigger target, or export it in a format that handles edges better. Our guide on <a href="/blog/lossy-vs-lossless-compression/">lossy and lossless compression</a> explains why edges suffer and how to choose when the picture contains text.</p>
+
+<h2>Pick Formats to Match Your Platform</h2>
+<p>For product photos on a white background, WebP is a strong default in the browser because it is smaller than JPEG at comparable quality and supported everywhere current. If your platform serves images through its own CDN, it may convert to WebP or AVIF automatically, in which case a well-made JPEG master is all you need to supply. Products with transparent backgrounds, such as cut-out furniture used in room scenes, need a format with alpha: WebP or PNG. For the wider trade-offs, see <a href="/blog/jpeg-vs-webp-vs-avif/">JPEG vs WebP vs AVIF</a>. One caution about email: some desktop email clients still handle WebP and AVIF poorly, so use JPG for images that will be sent in newsletters.</p>
+
+<h2>Do Not Forget the Non-Pixel Parts</h2>
+<p>Search engines and screen readers do not see your photo, they see the surrounding text. Give every image a descriptive file name such as <code>navy-linen-shirt-front.jpg</code> rather than <code>IMG_4471.jpg</code>, and write real alt text that describes what the picture shows. Use consistent aspect ratios across a category so the grid stays neat and does not jump as images load. And note that merchant platforms, including Google Merchant Center, accept very large files, which tempts sellers to upload raw camera output. That is convenient for the platform and bad for your storefront, so keep your on-site images light even when other channels are forgiving.</p>
+
+<h2>A Workflow That Scales Without Special Software</h2>
+<ol>
+<li>Export a clean master of each product at around 2000px on the long edge.</li>
+<li>Decide the role: thumbnail, main image, or zoom.</li>
+<li>Open the matching tool page and compress. Compress To KB runs in your browser, so your unreleased product photos are not uploaded to us.</li>
+<li>Look at the result at full size and at the size a phone will show it.</li>
+<li>Name the file sensibly and keep your folder structure consistent.</li>
+<li>Test one category page on a phone using mobile data, not your office Wi-Fi.</li>
+</ol>
+<p>The tool handles one image at a time, so it suits small and mid-sized catalogues and quick fixes. If you have thousands of SKUs, you will want an automated pipeline on your server, and the target sizes above still tell you what to configure.</p>
 
 <h2>The Bottom Line</h2>
-<p>A faster store is not just a technical nicety &mdash; it directly affects how many visitors stick around long enough to buy. Compressing product photography to the smallest size that still looks trustworthy is one of the highest-leverage, lowest-effort improvements an online store can make.</p>
+<p>Store images are a series of small decisions, not one big one. Match the target to the job, protect the details shoppers zoom into, keep an untouched master, and test on a real phone. Do those four things and you will usually get a faster store and better-looking products at the same time.</p>
+
+<h2>Handling Bulk Catalogue Updates</h2>
+<p>Seasonal refreshes and new supplier photo drops often mean dozens or hundreds of images arriving at once. Resist the urge to apply one aggressive setting to the whole batch just to get it done quickly. Sort images into the same role-based buckets described above first, even a rough sort into "thumbnail", "main" and "zoom" folders takes only a few minutes, and then process each folder with its own target. It is far faster to fix a mis-sorted batch of raw photos than to redo three hundred over-compressed thumbnails after a customer complains that a product looks blurry.</p>
+<p>It also helps to keep a short naming convention that survives re-exports, such as <code>sku-angle-role.jpg</code>. When a supplier sends a revised photo for one SKU, you can find and replace the exact file instead of searching through an unlabelled folder, and you avoid orphaned old images still being served from a cache.</p>
+
+<h2>A Note on Marketplace Listings</h2>
+<p>If you sell on third-party marketplaces alongside your own store, remember that each platform re-encodes images on its own terms and often accepts a much larger upload than your website should ever serve directly. That is fine for the marketplace, but do not assume the same file is appropriate for your own product pages. Keep your on-site catalogue governed by the role-based targets in this guide regardless of what a marketplace allows, since your own page speed is not the marketplace's problem to solve.</p>
+
+<div class="article" style="margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border-color, #e2e2e2);"><p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.5rem;"><strong>Sources &amp; further reading</strong></p><ul style="font-size:0.875rem;color:var(--text-secondary);line-height:1.8;"><li><a href="https://web.dev/articles/responsive-images" rel="noopener noreferrer" target="_blank">web.dev: Responsive images</a></li><li><a href="https://developers.google.com/search/docs/appearance/google-images" rel="noopener noreferrer" target="_blank">Google Search Central: Image SEO best practices</a></li><li><a href="https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Image_types" rel="noopener noreferrer" target="_blank">MDN: Image file type and format guide</a></li></ul></div>
+
 
     </div>
   </section>
@@ -178,6 +224,6 @@
     </div>
   </div>
 </footer>
-<script src="/assets/js/main.js?v=4" defer></script>
+<script src="/assets/js/main.js?v=5" defer></script>
 </body>
 </html>
