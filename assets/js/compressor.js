@@ -158,14 +158,13 @@
       webp: 'image/webp',
       avif: 'image/avif',
       gif: 'image/gif',
-      bmp: 'image/bmp',
-      tiff: 'image/tiff', tif: 'image/tiff'
+      bmp: 'image/bmp'
     };
     return map[ext] || file.type || CONFIG.DEFAULT_FORMAT;
   }
 
   function isSupportedFormat(mimeType) {
-    return ['image/jpeg','image/png','image/webp','image/avif','image/gif','image/bmp','image/tiff'].includes(mimeType);
+    return ['image/jpeg','image/png','image/webp','image/avif','image/gif','image/bmp'].includes(mimeType);
   }
 
   function getSuggestedOutputFormat(originalMime, hasAlpha, targetKB, userFormat) {
@@ -588,7 +587,11 @@
     const h = Math.min(sourceHeight, 200);
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext('2d');
+    // willReadFrequently: true tells the browser up front that this canvas will be read back
+    // via getImageData() rather than only drawn to the screen, so it can pick a backing store
+    // optimized for CPU readback instead of GPU compositing. Without this, Chromium logs a
+    // "Multiple readback operations..." performance warning and readback is measurably slower.
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(source, 0, 0, w, h);
     try {
       const data = ctx.getImageData(0, 0, w, h).data;
@@ -792,7 +795,7 @@
     const mimeType = getMimeTypeFromFile(file);
 
     if (!isSupportedFormat(mimeType)) {
-      throw new Error('Unsupported file format. Please use JPG, PNG, WebP, AVIF, GIF, BMP, or TIFF.');
+      throw new Error('Unsupported file format. Please use JPG, PNG, WebP, AVIF, GIF, or BMP.');
     }
 
     if (file.size > 50 * 1024 * 1024) {
@@ -1084,7 +1087,7 @@
 
     const mimeType = getMimeTypeFromFile(file);
     if (!isSupportedFormat(mimeType)) {
-      showError('Please select a valid image file (JPG, PNG, WebP, AVIF, GIF, BMP, or TIFF).');
+      showError('Please select a valid image file (JPG, PNG, WebP, AVIF, GIF, or BMP).');
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
