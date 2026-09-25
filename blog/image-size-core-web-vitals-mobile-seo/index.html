@@ -2,10 +2,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NH7BCRJJBH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-NH7BCRJJBH');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How Image Size Directly Impacts Core Web Vitals and Mobile SEO | Compress To KB</title>
-<meta name="description" content="Why unoptimized images are the biggest cause of poor Core Web Vitals scores, and how reducing image weight improves LCP, load time, and search rankings.">
+<title>How Image Size Affects Core Web Vitals &amp; Mobile SEO</title>
+<meta name="description" content="Why unoptimized images are a top cause of poor Core Web Vitals scores, and how reducing image weight improves LCP, load time, and search rankings.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://compressortokb.com/blog/image-size-core-web-vitals-mobile-seo/">
 <meta property="og:title" content="How Image Size Directly Impacts Core Web Vitals and Mobile SEO | Compress To KB">
@@ -93,28 +102,72 @@
   </section>
   <section class="section">
     <div class="container article">
+<p style="font-size:0.875rem;color:var(--text-secondary);border-left:3px solid var(--accent);padding-left:0.75rem;margin-bottom:1.5rem;">Written and reviewed by the <a href="/about/">Compress To KB editorial team</a>. Last updated September 24, 2026. We build and maintain the compressor this guide refers to, so what we say about how it behaves comes from its actual code and from day-to-day use, not from guesswork.</p>
 
-<p>Google's Core Web Vitals &mdash; Largest Contentful Paint (LCP), Interaction to Next Paint (INP), and Cumulative Layout Shift (CLS) &mdash; directly influence how your pages rank, and images are frequently the single biggest factor behind a poor score.</p>
+<p>If you open PageSpeed Insights on a slow page and read the recommendations from the top, there is a good chance the first three are about images. That is not a coincidence. Photos are usually the heaviest thing a page downloads, and they are very often the element Google's metrics are timing. This guide explains how image weight connects to Core Web Vitals, what is worth fixing first, and how much ranking benefit you should realistically expect.</p>
 
-<h2>Images and LCP</h2>
-<p>LCP measures how long it takes for the largest visible element on a page &mdash; very often a hero image or featured photo &mdash; to fully render. An unoptimized 3MB photo straight off a phone camera can single-handedly push your LCP well past Google's "good" threshold of 2.5 seconds, especially on mobile connections. Compressing that same image down to 150&ndash;250KB, with no visible quality loss to a typical reader, can cut load time dramatically.</p>
+<h2>A Quick Refresher on the Three Metrics</h2>
+<p>Core Web Vitals are three measurements of real-user experience. <strong>Largest Contentful Paint (LCP)</strong> is the time it takes for the biggest visible element to render, and Google considers 2.5 seconds or less to be good. <strong>Interaction to Next Paint (INP)</strong> measures how quickly the page responds to taps and clicks, with 200 milliseconds or less counted as good. <strong>Cumulative Layout Shift (CLS)</strong> scores how much the layout jumps around while loading, with 0.1 or less as good. Google evaluates them at the 75th percentile of real visits, separately for mobile and desktop, using field data from the Chrome User Experience Report. The <a href="https://web.dev/articles/vitals" rel="noopener noreferrer">web.dev documentation</a> explains all three in detail.</p>
+<p>Notice what that means in practice: your score is not what you see on your own fast laptop. It is what the slower quarter of your visitors experience, which for many sites is a mid-range Android phone on a patchy 4G connection.</p>
 
-<h2>Images and CLS</h2>
-<p>Layout shift often happens when an image loads slowly and pushes surrounding content around as it finally appears. Smaller, faster-loading images reduce the window in which that shift can occur, alongside proper width/height attributes in your HTML.</p>
+<h2>Where Images Hurt LCP</h2>
+<p>On most blog posts, product pages and landing pages, the largest element is an image: a hero, a featured photo or a product shot. LCP time is the sum of four parts, which web.dev lists as time to first byte, resource load delay, resource load duration and element render delay. File size affects the third part directly. A 2.8MB photo straight from a phone takes several seconds to download on a modest mobile connection no matter how good your hosting is. Bring the same image to around 150–250KB and that part of the timeline shrinks dramatically, often by more than any server upgrade would achieve.</p>
+<p>The other parts matter too, and compression will not fix them. If the browser does not discover the hero image until late, or if a script delays rendering, a small file still arrives late. Do not lazy-load the LCP image, since lazy loading tells the browser to wait. Give it <code>fetchpriority="high"</code> instead, and make sure it is in the initial HTML rather than injected by JavaScript.</p>
 
-<h2>Mobile Matters More Than Desktop</h2>
-<p>Google evaluates Core Web Vitals primarily using mobile data, where connections are slower and less consistent than a home broadband line. A page that feels instant on office Wi-Fi can feel sluggish on a 4G connection in a moving vehicle &mdash; and image weight is usually the biggest single lever you can pull to fix that gap.</p>
+<h2>Where Images Hurt CLS</h2>
+<p>Layout shift happens when an image arrives and pushes text downward because the browser had not reserved space for it. The cure is unglamorous: put <code>width</code> and <code>height</code> attributes on every image, or use the CSS <code>aspect-ratio</code> property, so the space exists before the pixels do. Smaller files help indirectly because they finish loading sooner, but reserved space is what actually prevents the jump.</p>
 
-<h2>Practical Targets for Web Images</h2>
+<h2>What About INP?</h2>
+<p>To be straightforward about it, INP is mostly about JavaScript and main-thread work, not image bytes. Huge images can contribute indirectly, for instance by making decoding compete with scripts on a weak phone, but if your INP is poor, look at your scripts first. We mention it so you do not chase image compression to fix a problem it cannot solve.</p>
+
+<h2>Dimensions Matter as Much as Kilobytes</h2>
+<p>A frequent mistake is compressing a 4000-pixel-wide photo to 300KB when the page only ever displays it 800 pixels wide. You have paid for pixels nobody sees. The better order of work is to resize the image to about twice its largest display width (the extra covers high-density phone screens), then compress it. Our tool is a compressor, not a resizer: it keeps your dimensions when it can and reduces them only as a last resort to reach a target, so resize first if you know the display size.</p>
+
+<h2>Sensible Targets for Common Image Roles</h2>
+<div style="overflow-x:auto;">
+<table class="compare-table" style="width:100%;border-collapse:collapse;">
+<thead><tr><th>Image role</th><th>Reasonable target</th><th>Tool page</th></tr></thead>
+<tbody>
+<tr><td>Hero or full-width banner</td><td>150–250 KB</td><td><a href="/image-compressor-to-200kb/">200KB</a></td></tr>
+<tr><td>Blog featured image</td><td>100–200 KB</td><td><a href="/image-compressor-to-150kb/">150KB</a></td></tr>
+<tr><td>In-article graphic or chart</td><td>75–150 KB</td><td><a href="/image-compressor-to-100kb/">100KB</a></td></tr>
+<tr><td>Thumbnail or avatar</td><td>20–75 KB</td><td><a href="/image-compressor-to-75kb/">75KB</a></td></tr>
+<tr><td>Zoomable product or portfolio photo</td><td>250–500 KB</td><td><a href="/image-compressor-to-300kb/">300KB</a></td></tr>
+</tbody>
+</table>
+</div>
+<p>These are starting points, not laws. A photo with a lot of fine texture, such as foliage or fabric, needs more bytes to look clean than a photo of a smooth sky. Always check the result at the size a visitor will actually see it.</p>
+
+<h2>Choose the Format Wisely</h2>
+<p>At the same visual quality, WebP is generally smaller than JPEG and AVIF often smaller still, which means the same LCP image can weigh noticeably less without any visible change. We compare them properly in <a href="/blog/jpeg-vs-webp-vs-avif/">JPEG vs WebP vs AVIF</a>. For a website you control, serving WebP or AVIF with a JPEG fallback through the <code>picture</code> element is a well-supported approach. Pair it with <code>srcset</code> and <code>sizes</code> so phones download a smaller version than desktops; the responsive images article on <a href="https://web.dev/articles/responsive-images" rel="noopener noreferrer">web.dev</a> is the clearest reference we know.</p>
+
+<h2>Measure Before and After</h2>
+<p>Do not optimise on faith. Run your page through PageSpeed Insights, note the LCP element it identifies, and record the field data if your site has enough traffic to show it. Then replace only that one image with a compressed version and test again. If the LCP element turns out to be a text block or a slider script, compressing images will not move the number, and you will have saved yourself a lot of wasted effort. Lab tools like Lighthouse give instant feedback, but field data in the Search Console Core Web Vitals report takes about a month to reflect changes, so be patient.</p>
+
+<h2>How Much Will This Help Your Rankings?</h2>
+<p>Honest answer: some, but not as much as headlines suggest. Google states that page experience is one signal among many and that great content relevant to the query can still rank well with a mediocre score. Where speed makes a clear difference is in what happens after the click. A widely cited 2020 study by Deloitte for Google, <em>Milliseconds Make Millions</em>, found that shaving a tenth of a second off mobile load times was associated with measurable gains in retail conversions and engagement. Faster pages keep visitors around, and that benefit does not depend on any ranking algorithm. If you sell products, our guide on <a href="/blog/optimize-ecommerce-images-sales/">optimising e-commerce images</a> applies the same ideas to catalogues.</p>
+
+<h2>A Practical Order of Work</h2>
 <ul>
-<li><strong>Hero/banner images:</strong> aim for 150&ndash;250KB (try our <a href="/image-compressor-to-200kb/">200KB tool</a>)</li>
-<li><strong>Blog featured images:</strong> 100&ndash;200KB is usually enough for full detail at typical display sizes</li>
-<li><strong>Thumbnails and avatars:</strong> 20&ndash;75KB is plenty since they render small</li>
-<li><strong>Product photography that may be zoomed:</strong> 250&ndash;500KB to preserve fine detail</li>
+<li>Identify the LCP image on your five most-visited pages.</li>
+<li>Resize each to about twice its display width.</li>
+<li>Compress it to a sensible target using the <a href="/image-compressor-to-200kb/">200KB</a> or <a href="/image-compressor-to-100kb/">100KB</a> tool, and inspect the result.</li>
+<li>Add width and height attributes, and fetch priority on the hero.</li>
+<li>Lazy-load images below the fold, never the hero.</li>
+<li>Re-test, and only then move to the next batch.</li>
 </ul>
+<p>Small, targeted changes to a handful of important images almost always beat a site-wide overhaul. Start with the picture your visitors see first.</p>
 
-<h2>Beyond Compression</h2>
-<p>Compression is the single highest-leverage step, but pairing it with modern formats (WebP/AVIF), responsive <code>srcset</code> markup, and lazy loading for below-the-fold images compounds the improvement even further. Start by compressing your largest, most visible images first &mdash; that is almost always where the biggest LCP wins are hiding.</p>
+<h2>A Word on Third-Party Optimisation Plugins</h2>
+<p>Many content management systems offer plugins that promise to compress every image automatically on upload. These can be genuinely useful, and if you already run one, check what it is actually doing before assuming the job is finished. Some only apply lossless optimisation, which trims a small percentage without changing quality; others let you set a lossy quality level or a target size, which is where the real savings come from. Run a plugin-optimised image through PageSpeed Insights afterwards rather than trusting the plugin's own dashboard, since "optimised" badges do not always mean "small enough". A manual pass on your handful of highest-traffic pages, using a specific target size for the actual LCP image, often beats a blanket automatic setting tuned to be safe for every image on the site.</p>
+
+<h2>Common Questions</h2>
+<p><strong>Does converting to WebP or AVIF automatically fix LCP?</strong> Only partly. A smaller file downloads faster, which helps the load-duration part of LCP, but if the image is discovered late or a slow script blocks rendering, format alone will not fix those parts of the timeline.</p>
+<p><strong>Should I compress every image on the page the same way?</strong> No. Treat the LCP image differently from images far below the fold. The visible hero deserves careful, individual attention; a gallery of thumbnails can usually share one setting.</p>
+<p><strong>Is there a point where compressing further stops helping?</strong> Yes. Once a file is small enough that the download time is no longer the bottleneck, further compression only risks visible quality loss for no measurable speed gain. Test on a throttled mobile connection to find that point rather than guessing.</p>
+
+<div class="article" style="margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border-color, #e2e2e2);"><p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.5rem;"><strong>Sources &amp; further reading</strong></p><ul style="font-size:0.875rem;color:var(--text-secondary);line-height:1.8;"><li><a href="https://web.dev/articles/vitals" rel="noopener noreferrer" target="_blank">web.dev: Web Vitals overview</a></li><li><a href="https://web.dev/articles/lcp" rel="noopener noreferrer" target="_blank">web.dev: Largest Contentful Paint</a></li><li><a href="https://web.dev/articles/cls" rel="noopener noreferrer" target="_blank">web.dev: Cumulative Layout Shift</a></li><li><a href="https://developers.google.com/search/docs/appearance/core-web-vitals" rel="noopener noreferrer" target="_blank">Google Search Central: Core Web Vitals and search</a></li></ul></div>
+
 
     </div>
   </section>
@@ -181,6 +234,6 @@
     </div>
   </div>
 </footer>
-<script src="/assets/js/main.js?v=4" defer></script>
+<script src="/assets/js/main.js?v=5" defer></script>
 </body>
 </html>
